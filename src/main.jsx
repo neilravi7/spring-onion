@@ -7,7 +7,6 @@ import configureStore from './redux/store/index.js'
 import App from './App.jsx'
 import './index.css'
 
-
 const store = configureStore();
 
 createRoot(document.getElementById('root')).render(

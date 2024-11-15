@@ -4,21 +4,49 @@ import { Eye, EyeOff, ChefHat } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { motion } from 'framer-motion';
 import authBg from '../../../../assets/auth-bg-d79436e2.png';
-import { useSelector } from 'react-redux';
-import { useDispatch } from 'react-redux';
-
+import { useDispatch, useSelector } from 'react-redux';
+import { userSignUp } from '../../../../redux/actions/auth';
+import toast from 'react-hot-toast';
+import { useEffect } from 'react';
 
 export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { register, handleSubmit, formState: { errors }, watch } = useForm();
   const {error, success, inProgress} = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
+
 
   const onSubmit = (data) => {
-    console.log(error, success, inProgress);
     console.log(data)
-    // Handle registration logic here
+    dispatch(userSignUp(data));
   }
+
+  useEffect(() => {
+    if (error) {
+      toast.error(error); // Show error message
+    }
+    if (success) {
+      toast.success("Signup successful!"); // Show success message
+    }
+    // Optionally handle inProgress state
+    if (inProgress) {
+      toast.success('in progress.', {
+        style: {
+          border: '1px solid #713200',
+          padding: '16px',
+          color: '#713200',
+        },
+        iconTheme: {
+          primary: '#713200',
+          secondary: '#FFFAEE',
+        },
+      });
+      // Optional: Show progress message
+    }
+  }, [error, success, inProgress]); // Dependency array ensures this runs when these values change
+
+  
 
   const password = watch("password1", "")
 
@@ -184,9 +212,10 @@ export default function RegisterPage() {
             <div>
               <motion.button
                 type="submit"
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                className={inProgress ? "w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gray-400 hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500" : "w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500" }
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
+                disabled={inProgress}
               >
                 Register
               </motion.button>

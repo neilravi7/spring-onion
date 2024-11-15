@@ -1,7 +1,7 @@
 import { getAccessToken, logoutUser } from "./utils";
 
 // Create request options based on requirement 
-export function requestCreator(
+export function requestOptionCreator(
   requestMethod,
   requestBody = {},
   needAuth = false
