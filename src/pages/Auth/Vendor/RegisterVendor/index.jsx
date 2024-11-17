@@ -1,27 +1,27 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { ChefHat, MapPin, Camera, AlertCircle } from 'lucide-react';
+import { useSelector, useDispatch } from 'react-redux';
+import { motion } from 'framer-motion';
+import toast from 'react-hot-toast';
+import { ChefHat, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { userSignUp } from '../../../../redux/actions/auth';
+import { Link } from 'react-router-dom';
 
-export default function FoodVendorRegistration() {
-  const { register, handleSubmit, formState: { errors }, watch } = useForm();
-  const [imagePreview, setImagePreview] = useState(null);
+
+export default function RegisterVendor() {
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const { register, handleSubmit, formState: { errors }, watch } = useForm()
+  const { error, success, inProgress, isAuthenticated } = useSelector((state) => state.auth); 
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const onSubmit = (data) => {
-    console.log(data)
-    // Handle registration logic here
+    dispatch(userSignUp(data));
   }
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setImagePreview(reader.result)
-      }
-      reader.readAsDataURL(file)
-    }
-  }
+  const password = watch("password1", "")
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -32,6 +32,19 @@ export default function FoodVendorRegistration() {
     hidden: { y: 20, opacity: 0 },
     visible: { y: 0, opacity: 1, transition: { duration: 0.5 } }
   }
+
+  useEffect(() => {
+    if (isAuthenticated){
+      navigate("/dashboard")
+    }
+    if (error) {
+      toast.error(error); // Show error message
+    }
+    if (success) {
+      toast.success("Sign Up successful!"); // Show success message
+      navigate('/vendor/login');
+    }
+  }, [error, success, inProgress, isAuthenticated]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-100 to-orange-100 flex items-center justify-center px-4 sm:px-6 lg:px-8">
@@ -55,97 +68,117 @@ export default function FoodVendorRegistration() {
           <motion.div variants={itemVariants} className="rounded-md shadow-sm -space-y-px">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
-                <label htmlFor="first-name" className="sr-only">First name</label>
+                <label htmlFor="first_name" className="sr-only">First name</label>
                 <input
-                  id="first-name"
+                  id="first_name"
                   name="firstName"
                   type="text"
                   autoComplete="given-name"
                   required
                   className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-red-500 focus:border-red-500 focus:z-10 sm:text-sm"
                   placeholder="First name"
-                  {...register("firstName", { required: "First name is required" })}
+                  {...register("first_name", { required: "First name is required" })}
                 />
               </div>
               <div>
-                <label htmlFor="last-name" className="sr-only">Last name</label>
+                <label htmlFor="last_name" className="sr-only">Last name</label>
                 <input
-                  id="last-name"
-                  name="lastName"
+                  id="last_name"
+                  name="last_name"
                   type="text"
                   autoComplete="family-name"
                   required
                   className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-red-500 focus:border-red-500 focus:z-10 sm:text-sm"
                   placeholder="Last name"
-                  {...register("lastName", { required: "Last name is required" })}
+                  {...register("last_name", { required: "Last name is required" })}
                 />
               </div>
             </div>
           </motion.div>
 
           <motion.div variants={itemVariants}>
-            <label htmlFor="restaurant-name" className="sr-only">Restaurant name</label>
+            <label htmlFor="email" className="sr-only">Email address</label>
             <input
-              id="restaurant-name"
-              name="restaurantName"
-              type="text"
+              id="email"
+              name="email"
+              type="email"
+              autoComplete="email"
               required
               className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-red-500 focus:border-red-500 focus:z-10 sm:text-sm"
-              placeholder="Restaurant name"
-              {...register("restaurantName", { required: "Restaurant name is required" })}
+              placeholder="Email address"
+              {...register("email", { 
+                required: "Email is required",
+                pattern: {
+                  value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                  message: "Invalid email address"
+                }
+              })}
             />
           </motion.div>
 
           <motion.div variants={itemVariants}>
-            <label htmlFor="address" className="sr-only">Address</label>
-            <div className="mt-1 relative rounded-md shadow-sm">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <MapPin className="h-5 w-5 text-gray-400" aria-hidden="true" />
-              </div>
+            <label htmlFor="password1" className="sr-only">Password</label>
+            <div className="relative">
               <input
-                type="text"
-                name="address"
-                id="address"
-                className="focus:ring-red-500 focus:border-red-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md"
-                placeholder="Restaurant address"
-                {...register("address", { required: "Address is required" })}
+                id="password1"
+                name="password1"
+                type={showPassword ? "text" : "password"}
+                autoComplete="new-password"
+                required
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-red-500 focus:border-red-500 focus:z-10 sm:text-sm"
+                placeholder="Password"
+                {...register("password1", { 
+                  required: "Password is required",
+                  minLength: { value: 8, message: "Password must be at least 8 characters long" }
+                })}
               />
+              <button
+                type="button"
+                className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? (
+                  <EyeOff className="h-5 w-5 text-gray-400" />
+                ) : (
+                  <Eye className="h-5 w-5 text-gray-400" />
+                )}
+              </button>
             </div>
           </motion.div>
 
           <motion.div variants={itemVariants}>
-            <label htmlFor="restaurant-image" className="block text-sm font-medium text-gray-700">
-              Restaurant Image
-            </label>
-            <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
-              <div className="space-y-1 text-center">
-                {imagePreview ? (
-                  <img src={imagePreview} alt="Restaurant preview" className="mx-auto h-32 w-32 object-cover rounded-md" />
+            <label htmlFor="password2" className="sr-only">Confirm Password</label>
+            <div className="relative">
+              <input
+                id="password2"
+                name="password2"
+                type={showConfirmPassword ? "text" : "password"}
+                autoComplete="new-password"
+                required
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-red-500 focus:border-red-500 focus:z-10 sm:text-sm"
+                placeholder="Confirm Password"
+                {...register("password2", { 
+                  required: "Please confirm your password",
+                  validate: value => value === password || "The passwords do not match"
+                })}
+              />
+              <button
+                type="button"
+                className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              >
+                {showConfirmPassword ? (
+                  <EyeOff className="h-5 w-5 text-gray-400" />
                 ) : (
-                  <Camera className="mx-auto h-12 w-12 text-gray-400" />
+                  <Eye className="h-5 w-5 text-gray-400" />
                 )}
-                <div className="flex text-sm text-gray-600">
-                  <label
-                    htmlFor="restaurant-image"
-                    className="relative cursor-pointer bg-white rounded-md font-medium text-red-600 hover:text-red-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-red-500"
-                  >
-                    <span>Upload a file</span>
-                    <input 
-                      id="restaurant-image" 
-                      name="restaurantImage" 
-                      type="file" 
-                      className="sr-only"
-                      accept="image/*"
-                      onChange={handleImageChange}
-                      {...register("restaurantImage", { required: "Restaurant image is required" })}
-                    />
-                  </label>
-                  <p className="pl-1">or drag and drop</p>
-                </div>
-                <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
-              </div>
+              </button>
             </div>
           </motion.div>
+
+          {/* Hidden field for is_vendor */}
+          <input type="hidden" name="is_vendor" value="true" {...register("is_vendor")} />
+          <input type="hidden" name="is_customer" value="false" {...register("is_customer")} />
 
           {Object.keys(errors).length > 0 && (
             <motion.div variants={itemVariants} className="rounded-md bg-red-50 p-4">
@@ -175,10 +208,17 @@ export default function FoodVendorRegistration() {
               <span className="absolute left-0 inset-y-0 flex items-center pl-3">
                 <ChefHat className="h-5 w-5 text-red-500 group-hover:text-red-400" aria-hidden="true" />
               </span>
-              Register Restaurant
+              Register as Vendor
             </button>
           </motion.div>
         </form>
+
+        <motion.p className="mt-2 text-center text-sm text-gray-600" variants={itemVariants}>
+          Already have an account?{' '}
+          <Link to={"/vendor/login"} className="font-medium text-red-600 hover:text-red-500">
+            Sign in
+          </Link>
+        </motion.p>
       </motion.div>
     </div>
   )

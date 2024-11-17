@@ -43,7 +43,7 @@ export function getUserDetails(){
 export function logoutUser(){
     window.localStorage.removeItem("access");
     window.localStorage.removeItem("refresh");
-    window.localStorage.removeItem("userDetails");
+    window.localStorage.removeItem("userInfo");
 }
 
 // Format date time.

@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Search, ShoppingCart, User, MapPin, Clock, Star, Menu, X, ChefHat, Coffee, ImageOff } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Search, ShoppingCart, User, MapPin, Clock, Star, Menu, X, ChefHat, Coffee, ImageOff, LogOut } from 'lucide-react';
 import SearchComponent from '../../components/MarketPlace/SearchComponent';
 import vendor from '../../assets/vendor-13.jpg';
 import appBg from '../../assets/chef-1.png';
+import { useDispatch, useSelector } from 'react-redux';
+import { logoutUser as userSessionLogout } from '../../helpers/utils';
+import { logoutUser as userAuthLogout } from '../../redux/actions/auth';
 
 
 const restaurants = [
@@ -23,10 +26,24 @@ const categories = [
 ]
 
 export default function HomePage() {
+  const {isAuthenticated, isLocated, isCustomer} = useSelector((state) => state.auth);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLocated, setIsLocated] = useState(false);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
+  const logOut = () => {
+    userSessionLogout();
+    dispatch(userAuthLogout());
+  }
+
+  useEffect(() => {
+    if(!isAuthenticated && !isCustomer){
+      navigate("/login");
+    }
+    
+    },[isAuthenticated, isCustomer]
+  );
+  
   return (
     <div className="min-h-screen bg-white">
       <header className="bg-white shadow-md sticky top-0 z-50">
@@ -46,13 +63,18 @@ export default function HomePage() {
                 </div>
                 <button className="p-2 rounded-full bg-gray-200 hover:bg-gray-300 transition duration-300">
                   <ShoppingCart className="h-5 w-5" />
+                  
                 </button>
                 <button className="p-2 rounded-full bg-gray-200 hover:bg-gray-300 transition duration-300">
                   <User className="h-5 w-5" />
                 </button>
+                <button onClick={()=> logOut()} className="p-2 rounded-full bg-gray-200 hover:bg-gray-300 transition duration-300">
+                  <LogOut className="h-5 w-5" />
+                </button>
               </>
               :
               <>
+                <Link to={'/vendor/on-boarding'}className="bg-white text-red-600 px-4 py-2 rounded-full font-semibold hover:bg-red-100 transition duration-300">Add Restaurant</Link>
                 <Link to={'/login'}className="bg-white text-red-600 px-4 py-2 rounded-full font-semibold hover:bg-red-100 transition duration-300">Login</Link>
                 <Link to={'/sign-up'}className="bg-black text-white px-4 py-2 rounded-full font-semibold hover:bg-gray-800 transition duration-300">Sign Up</Link>
               </>
@@ -78,6 +100,9 @@ export default function HomePage() {
                       </button>
                       <button className="p-2 rounded-full bg-gray-200 hover:bg-gray-300 transition duration-300">
                         <User className="h-5 w-5" />
+                      </button>
+                      <button onClick={()=> logOut()} className="p-2 rounded-full bg-gray-200 hover:bg-gray-300 transition duration-300">
+                        <LogOut className="h-5 w-5" />
                       </button>
                     </div>
                 </>

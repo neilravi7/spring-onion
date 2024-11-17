@@ -45,9 +45,9 @@ export async function requestMaker(endpoint, requestOptions) {
 
     // Handle other status codes
     if (response.status === 400) {
-      return { isError: true, data };
+      return { isError: true, message:"Oops some error occurred.", data};
     } else if (response.status === 200 || response.status === 201) {
-      return { isError: false, data };
+      return { isError: false, message:"Success.", data };
     }
 
     // Default case for unexpected status codes

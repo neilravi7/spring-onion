@@ -2,6 +2,9 @@
 //! Clear Auth State
 export const CLEAR_AUTH_STATE = "CLEAR_AUTH_STATE";
 
+//! Clear User Session
+export const LOGOUT_USER = "LOGOUT_USER";
+
 //! SignUp actions
 export const SIGN_UP_START = "SIGN_UP_START";
 export const SIGN_UP_SUCCESS = "SIGN_UP_SUCCESS";

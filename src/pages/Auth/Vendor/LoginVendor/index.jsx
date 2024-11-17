@@ -1,18 +1,27 @@
-import React, { useState } from 'react'
-import { motion } from 'framer-motion'
-import { useForm } from 'react-hook-form'
-import { ChefHat, Mail, Lock, AlertCircle, Loader } from 'lucide-react'
+import React, { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { useSelector, useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import toast from 'react-hot-toast';
+import { ChefHat, Mail, Lock, AlertCircle, Loader } from 'lucide-react';
+import { userLogin } from '../../../../redux/actions/auth';
+import { Link } from 'react-router-dom';
 
 export default function FoodVendorLogin() {
   const { register, handleSubmit, formState: { errors } } = useForm()
   const [isLoading, setIsLoading] = useState(false)
+  const { error, success, inProgress, isAuthenticated } = useSelector((state) => state.auth); 
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
 
   const onSubmit = async (data) => {
-    setIsLoading(true)
+    setIsLoading(true);
     // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    console.log(data)
-    setIsLoading(false)
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    dispatch(userLogin(data));
+    setIsLoading(false);
     // Handle login logic here
   }
 
@@ -25,6 +34,20 @@ export default function FoodVendorLogin() {
     hidden: { y: 20, opacity: 0 },
     visible: { y: 0, opacity: 1, transition: { duration: 0.5 } }
   }
+
+  useEffect(() => {
+    if (isAuthenticated){
+      navigate("/dashboard");
+    }
+    if (error) {
+      toast.error(error); // Show error message
+    }
+    if (success) {
+      toast.success("Login successful!"); // Show success message
+      navigate('/dashboard');
+    }
+
+  }, [error, success, inProgress, isAuthenticated])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-100 to-orange-100 flex items-center justify-center px-4 sm:px-6 lg:px-8">
@@ -136,9 +159,9 @@ export default function FoodVendorLogin() {
         <motion.div variants={itemVariants} className="text-center">
           <p className="text-sm text-gray-600">
             Don't have an account?{' '}
-            <a href="#" className="font-medium text-red-600 hover:text-red-500">
+            <Link to={"/vendor/on-boarding"} className="font-medium text-red-600 hover:text-red-500">
               Register here
-            </a>
+            </Link>
           </p>
         </motion.div>
       </motion.div>

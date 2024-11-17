@@ -1,4 +1,4 @@
-import { SIGN_UP_START, SIGN_UP_SUCCESS, SIGN_UP_FAILED, CLEAR_AUTH_STATE } from "../actions/actionType";
+import { SIGN_UP_START, SIGN_UP_SUCCESS, SIGN_UP_FAILED, CLEAR_AUTH_STATE, LOGIN_START, LOGIN_SUCCESS, LOGIN_FAILED, LOGOUT_USER } from "../actions/actionType";
 import { getUserDetails, isUserAuthenticated } from "../../helpers/utils";
 
 const userInfo = getUserDetails();
@@ -6,16 +6,19 @@ const isAuthenticated = isUserAuthenticated()
 
 const initialState = { 
     user:userInfo,
+    isAuthenticated:isAuthenticated,
+    isVendor:null,
+    isCustomer:null,
+    isLocated:false,
     error:null,
     success:false,
-    isAuthenticated:isAuthenticated,
-    inProgress:false,
+    inProgress:false
 }
-
 
 export default function auth(state=initialState, action){
     switch (action.type){
         case SIGN_UP_START:
+        case LOGIN_START:
             return{
                 ...state,
                 inProgress:true,
@@ -28,18 +31,38 @@ export default function auth(state=initialState, action){
                 success:true,
             }
         case SIGN_UP_FAILED:
+        case LOGIN_FAILED:
             return{
                 ...state,
                 inProgress:true,
                 success:false,
                 error:action.error
             }
-        case CLEAR_AUTH_STATE:
+        case LOGIN_SUCCESS:
             return{
                 ...state,
                 inProgress:false,
                 success:true,
+                isAuthenticated:true,
+                isLocated:false,
+                isVendor:action.vendor,
+                isCustomer:action.customer,
+            }
+        case LOGOUT_USER:
+            return{
+                ...state,
+                isAuthenticated:false,
+                isVendor:null,
+                isCustomer:null,
+                isLocated:false,
+            }
+        case CLEAR_AUTH_STATE:
+            return{
+                ...state,
+                inProgress:false,
+                success:false,
                 error:null,
+
             }
         default:{
             return{

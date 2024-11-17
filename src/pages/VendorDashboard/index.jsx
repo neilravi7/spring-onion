@@ -1,6 +1,10 @@
-import React, { useState } from 'react'
-import { motion } from 'framer-motion'
-import { Search, Bell, Settings, LogOut, ChevronDown, Star, PlusCircle } from 'lucide-react'
+import React, { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
+import { Search, Bell, Settings, LogOut, ChevronDown, Star, PlusCircle } from 'lucide-react';
+import { useSelector, useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import { logoutUser as userSessionLogout } from '../../helpers/utils';
+import { logoutUser as userAuthLogout } from '../../redux/actions/auth';
 
 const sidebarItems = [
   { icon: 'Grid', label: 'Dashboard', active: true },
@@ -39,6 +43,21 @@ const mealPlan = [
 
 export default function VendorDashboard() {
   const [activeTab, setActiveTab] = useState('Customers List')
+  const { isAuthenticated, isVendor } = useSelector((state) => state.auth);
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  const logOut = () => {
+    dispatch(userAuthLogout());
+    userSessionLogout();
+  }
+
+  useEffect(() => {
+    if (!isAuthenticated && !isVendor){
+      navigate("/vendor/login");
+    }
+  },[isAuthenticated, isVendor]);
+
 
   return (
     <div className="flex h-screen bg-gray-100">
@@ -69,10 +88,10 @@ export default function VendorDashboard() {
             <Settings className="mr-3" />
             Settings
           </a>
-          <a href="#" className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100">
+          <button onClick={() => logOut()} className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100">
             <LogOut className="mr-3" />
             Logout
-          </a>
+          </button>
         </div>
       </aside>
 
