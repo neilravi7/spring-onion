@@ -26,7 +26,10 @@ const categories = [
 ]
 
 export default function HomePage() {
-  const {isAuthenticated, isLocated, isCustomer} = useSelector((state) => state.auth);
+  const {isAuthenticated, isLocated, isVendor} = useSelector((state) => state.auth);
+
+  // console.log("isAuthenticated: ", isAuthenticated, "isVendor: ", isVendor);
+  
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -37,11 +40,11 @@ export default function HomePage() {
   }
 
   useEffect(() => {
-    if(!isAuthenticated && !isCustomer){
-      navigate("/login");
+    if(isAuthenticated && isVendor){
+      navigate("/dashboard");
     }
     
-    },[isAuthenticated, isCustomer]
+    },[isAuthenticated, isVendor]
   );
   
   return (
