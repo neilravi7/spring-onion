@@ -1,27 +1,26 @@
-import React, { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Clock, MapPin, Mail, User, Edit, Plus } from 'lucide-react'
 import vendor from "../../../assets/vendor-16.jpg";
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
+import { requestMaker, requestOptionCreator } from '../../../helpers/request';
+import { API_URL } from '../../../helpers/urls';
+import { getUserID } from '../../../helpers/utils';
+import toast from 'react-hot-toast';
 
-// This would typically come from an API or state management store
 const initialRestaurantData = {
-  name: "Gourmet Delight",
-  image: vendor,
-  ownerName: "Jane Doe",
-  email: "jane@gourmetdelight.com",
-  address: "123 Culinary Street, Foodville, FC 12345",
-  openTime: "11:00 AM",
-  closeTime: "10:00 PM",
-  isAcceptingDeliveries: true,
-  additionalFields: [
-    { key: "Phone", value: "(555) 123-4567" },
-    { key: "Cuisine Type", value: "International" }
-  ]
+  // additionalFields: [
+//   { key: "Phone", value: "(555) 123-4567" },
+//   { key: "Cuisine Type", value: "International" }
+// ]
 }
 
 export default function RestaurantProfile() {
+  const {isAuthenticated, isVendor} = useSelector((state) => state.auth);
   const [restaurantData, setRestaurantData] = useState(initialRestaurantData)
-  const [isEditing, setIsEditing] = useState(false)
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  // const [isEditing, setIsEditing] = useState(false)
 
   const toggleDeliveryStatus = () => {
     setRestaurantData(prev => ({
@@ -30,19 +29,42 @@ export default function RestaurantProfile() {
     }))
   }
 
-  const addNewField = () => {
-    setRestaurantData(prev => ({
-      ...prev,
-      additionalFields: [...prev.additionalFields, { key: "New Field", value: "New Value" }]
-    }))
+  // const addNewField = () => {
+  //   setRestaurantData(prev => ({
+  //     ...prev,
+  //     additionalFields: [...prev.additionalFields, { key: "New Field", value: "New Value" }]
+  //   }))
+  // }
+
+  const fetchVendorProfile = () => {
+    const vendorID = getUserID();
+    const requestOption = requestOptionCreator("GET", {}, true);
+    requestMaker(
+      API_URL.loadVendorProfile(vendorID), 
+      requestOption, dispatch).then((response) => {
+        if(!response.isError){
+          toast.success("Restaurant Data Fetched Successfully");
+          setRestaurantData(response.data);
+        }else{
+          toast.error("Unable to get Restaurant Data");
+        }
+    });
   }
+
+
+  useEffect(() => {
+    if(!isAuthenticated && !isVendor){
+      navigate("/vendor/login");
+    }
+    fetchVendorProfile();
+  },[isAuthenticated, isVendor]);
 
   return (
     <div className="max-w-4xl mx-auto p-6 bg-white shadow-lg rounded-lg">
       <div className="flex flex-col md:flex-row gap-6">
-        <div className="md:w-1/3">
+        <div className="md:w-2/3">
           <img
-            src={restaurantData.image}
+            src={restaurantData.image === "" ? vendor : restaurantData.image}
             alt={restaurantData.name}
             className="w-full h-auto rounded-lg shadow-md"
           />
@@ -95,7 +117,7 @@ export default function RestaurantProfile() {
         </div>
       </div>
 
-      <div className="mt-8">
+      {/* <div className="mt-8">
         <h2 className="text-2xl font-semibold text-gray-800 mb-4">Additional Information</h2>
         <div className="space-y-3">
           {restaurantData.additionalFields.map((field, index) => (
@@ -112,7 +134,7 @@ export default function RestaurantProfile() {
           <Plus className="w-5 h-5 mr-1" />
           Add New Field
         </button>
-      </div>
+      </div> */}
 
       {/* {isEditing && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">

@@ -12,6 +12,7 @@ const VendorHome = React.lazy(() => import("../pages/Dashboard/VendorHome"));
 const VendorMenu = React.lazy(() => import("../pages/Dashboard/VendorMenu"));
 const VendorProfile = React.lazy(() => import("../pages/Dashboard/VendorProfile"));
 const VendorProfileEdit = React.lazy(() => import("../pages/Dashboard/VendorProfileEdit"));
+const FourOFour = React.lazy(() => import("../pages/FourOFour"));
 
 
 
@@ -33,6 +34,7 @@ function AppRoutes(props) {
                     <Route path='/admin/profile/edit'  element={<VendorProfileEdit />}/>
                     <Route path='/admin/menu'  element={<VendorMenu />}/>
                 </Route>
+                <Route path='*' element={<FourOFour />}/>
             </Routes>
         </React.Suspense>
     );

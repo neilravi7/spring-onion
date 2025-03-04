@@ -1,59 +1,131 @@
-import React, { useState } from 'react'
-import { useForm } from 'react-hook-form'
-import { Dialog } from '@headlessui/react'
-import { Clock, MapPin, Mail, User, X, Plus } from 'lucide-react'
+import { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
+import { useForm } from 'react-hook-form';
+import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
+
+import { User, Mail, Phone, MapPin, Utensils, FileText, Check } from 'lucide-react';
+import { requestOptionCreator, requestMaker } from '../../../helpers/request';
+import { API_URL } from '../../../helpers/urls';
+import { getUserID } from '../../../helpers/utils';
+import { getAccessToken } from '../../../helpers/utils';
+import { form } from 'framer-motion/client';
+// import { pre } from 'framer-motion/client';
+
 
 const initialRestaurantData = {
-  name: "Gourmet Delight",
-  image: "/placeholder.svg?height=300&width=400",
-  ownerName: "Jane Doe",
-  email: "jane@gourmetdelight.com",
-  address: "123 Culinary Street, Foodville, FC 12345",
-  openTime: "11:00",
-  closeTime: "22:00",
-  isAcceptingDeliveries: true,
-  additionalFields: [
-    { key: "Phone", value: "(555) 123-4567" },
-    { key: "Cuisine Type", value: "International" }
-  ]
+  "first_name": "",
+  "last_name": "",
+  "email": "",
+  "image_url": "",
+  "name": "",
+  "phone": "",
+  "cuisine_type": [],
+  "description": "",
+  "is_active": false,
+  "address": ""
 }
 
-export default function Component() {
-  const [restaurantData, setRestaurantData] = useState(initialRestaurantData)
-  const [isImageModalOpen, setIsImageModalOpen] = useState(false)
-  const { register, handleSubmit, formState: { errors } } = useForm({
+export default function ProfileEditContent() {
+  const [restaurantData, setRestaurantData] = useState(() => initialRestaurantData);
+  const {isAuthenticated} = useSelector((state) => state.auth);
+  const [imageUrl, setImageUrl] = useState(() => "");
+  const [isImageUploading, setIsImageUploading] = useState(false);
+  const navigate = useNavigate();
+  const { register, handleSubmit, formState: { errors }, reset } = useForm({
     defaultValues: restaurantData
-  })
+  });
 
-  const onSubmit = (data) => {
-    setRestaurantData(data)
-    console.log('Updated data:', data)
-  }
+
+  // Handle Image Changes {Uploading New Images}
 
   const handleImageChange = (e) => {
-    const file = e.target.files?.[0]
+    const file = e.target.files?.[0];
+    setIsImageUploading(true);
+  
     if (file) {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setRestaurantData(prev => ({ ...prev, image: reader.result }))
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("album", "BHPmGr");
+  
+      const token = getAccessToken();
+      
+      if (!token) {
+        toast.error("Unauthorized: Please log in again.");
+        return;
       }
-      reader.readAsDataURL(file)
+      
+      fetch(API_URL.fileUploadAPI(), {
+        method: "POST",
+        body: formData,
+        headers: {
+          Authorization: `Token ${token}`,
+        },
+      })
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error("Failed to upload the image");
+          }
+          return response.json();
+        })
+        .then((data) => {
+          setRestaurantData({...restaurantData, image_url:data.url});
+          setImageUrl(data.url);
+          setIsImageUploading(false);
+        })
+        .catch((error) => {
+          console.error("Image upload failed:", error);
+          setIsImageUploading(false);
+        });
     }
+  };
+  
+  // Fetching Vendor Data
+  const fetchVendor = () => {
+    const vendorID = getUserID();
+    const requestOptions = requestOptionCreator("GET", {}, true);
+    requestMaker(API_URL.loadVendorDetail(vendorID), requestOptions)
+    .then((response) => {
+      if(response.isError){
+        toast.error("Error while loading vendor data");
+      }else{
+        setRestaurantData(response.data);
+        setImageUrl(response.data.image_url); // exceptional
+        reset(response.data);
+      }
+    })
   }
 
-  const addNewField = () => {
-    setRestaurantData(prev => ({
-      ...prev,
-      additionalFields: [...prev.additionalFields, { key: "", value: "" }]
-    }))
+  // Updating vendor data
+  const updateVendor = (requestBody) => {
+    const vendorID = getUserID();
+    const requestOptions = requestOptionCreator("PUT", requestBody, true);
+    requestMaker(API_URL.updateVendorProfile(vendorID), requestOptions)
+    .then((response) => {
+      if(response.isError){
+        toast.error("Error while load vendor data");
+      }else{
+        setRestaurantData(response.data);
+        reset(response.data);
+        toast.success("Profile Updated");
+      }
+    })
   }
 
-  const removeField = (index) => {
-    setRestaurantData(prev => ({
-      ...prev,
-      additionalFields: prev.additionalFields.filter((_, i) => i !== index)
-    }))
+  const onSubmit = (data) => {
+    const formData = {...data, image_url:imageUrl, is_active:true}
+    setRestaurantData(formData);
+    updateVendor(formData);
   }
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate("/vendor/login");
+    }
+    if (restaurantData.name === "") {
+      fetchVendor();
+    }
+  },[isAuthenticated, restaurantData.name]);
 
   return (
     <div className="max-w-4xl mx-auto p-6 bg-white shadow-lg rounded-lg">
@@ -63,14 +135,13 @@ export default function Component() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <img
-              src={restaurantData.image}
+              src={restaurantData.image_url}
               alt={restaurantData.name}
               className="w-full h-auto rounded-lg shadow-md cursor-pointer mb-4"
-              onClick={() => setIsImageModalOpen(true)}
             />
             <input
               type="file"
-              id="image"
+              id="image_url"
               accept="image/*"
               onChange={handleImageChange}
               className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
@@ -89,18 +160,33 @@ export default function Component() {
               {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>}
             </div>
 
-            <div>
-              <label htmlFor="ownerName" className="block text-sm font-medium text-gray-700">
-                <User className="w-4 h-4 inline-block mr-1" />
-                Owner Name
-              </label>
-              <input
-                {...register("ownerName", { required: "Owner name is required" })}
-                id="ownerName"
-                type="text"
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-              />
-              {errors.ownerName && <p className="mt-1 text-sm text-red-600">{errors.ownerName.message}</p>}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="first_name" className="block text-sm font-medium text-gray-700">
+                  <User className="w-4 h-4 inline-block mr-1" />
+                  First Name
+                </label>
+                <input
+                  {...register("first_name", { required: "First name is required" })}
+                  id="first_name"
+                  type="text"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                />
+                {errors.first_name && <p className="mt-1 text-sm text-red-600">{errors.first_name.message}</p>}
+              </div>
+              <div>
+                <label htmlFor="last_name" className="block text-sm font-medium text-gray-700">
+                  <User className="w-4 h-4 inline-block mr-1" />
+                  Last Name
+                </label>
+                <input
+                  {...register("last_name", { required: "Last name is required" })}
+                  id="last_name"
+                  type="text"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                />
+                {errors.last_name && <p className="mt-1 text-sm text-red-600">{errors.last_name.message}</p>}
+              </div>
             </div>
 
             <div>
@@ -122,6 +208,26 @@ export default function Component() {
               />
               {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>}
             </div>
+
+            <div>
+              <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
+                <Phone className="w-4 h-4 inline-block mr-1" />
+                Phone Number
+              </label>
+              <input
+                {...register("phone", { 
+                  required: "Phone number is required",
+                  pattern: {
+                    value: /^\d{10,12}$/,
+                    message: "Invalid phone number"
+                  }
+                })}
+                id="phone"
+                type="tel"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+              />
+              {errors.phone && <p className="mt-1 text-sm text-red-600">{errors.phone.message}</p>}
+            </div>
           </div>
         </div>
 
@@ -139,118 +245,65 @@ export default function Component() {
           {errors.address && <p className="mt-1 text-sm text-red-600">{errors.address.message}</p>}
         </div>
 
-        <div className="flex space-x-4">
-          <div className="flex-1">
-            <label htmlFor="openTime" className="block text-sm font-medium text-gray-700">
-              <Clock className="w-4 h-4 inline-block mr-1" />
-              Open Time
-            </label>
-            <input
-              {...register("openTime", { required: "Open time is required" })}
-              id="openTime"
-              type="time"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-            />
-            {errors.openTime && <p className="mt-1 text-sm text-red-600">{errors.openTime.message}</p>}
-          </div>
-          <div className="flex-1">
-            <label htmlFor="closeTime" className="block text-sm font-medium text-gray-700">
-              <Clock className="w-4 h-4 inline-block mr-1" />
-              Close Time
-            </label>
-            <input
-              {...register("closeTime", { required: "Close time is required" })}
-              id="closeTime"
-              type="time"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-            />
-            {errors.closeTime && <p className="mt-1 text-sm text-red-600">{errors.closeTime.message}</p>}
-          </div>
+        <div>
+          <label htmlFor="cuisine_type" className="block text-sm font-medium text-gray-700">
+            <Utensils className="w-4 h-4 inline-block mr-1" />
+            Cuisine Type
+          </label>
+          <input
+            {...register("cuisine_type.0", { required: "Cuisine type is required" })}
+            id="cuisine_type"
+            type="text"
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+          />
+          {errors.cuisine_type && <p className="mt-1 text-sm text-red-600">{errors.cuisine_type[0]?.message}</p>}
         </div>
 
         <div>
+          <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+            <FileText className="w-4 h-4 inline-block mr-1" />
+            Description
+          </label>
+          <textarea
+            {...register("description", { required: "Description is required" })}
+            id="description"
+            rows={4}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+          />
+          {errors.description && <p className="mt-1 text-sm text-red-600">{errors.description.message}</p>}
+        </div>
+
+        <div >
           <label className="flex items-center">
             <input
-              {...register("isAcceptingDeliveries")}
+              {...register("is_active")}
               type="checkbox"
               className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-offset-0 focus:ring-blue-200 focus:ring-opacity-50"
             />
-            <span className="ml-2 text-sm text-gray-700">Accepting Deliveries</span>
+            <span className="ml-2 text-sm text-gray-700">
+              <Check className="w-4 h-4 inline-block mr-1" />
+              Active
+            </span>
           </label>
         </div>
 
-        <div>
-          <h2 className="text-xl font-semibold text-gray-800 mb-2">Additional Information</h2>
-          {restaurantData.additionalFields.map((field, index) => (
-            <div key={index} className="flex items-center space-x-2 mb-2">
-              <input
-                {...register(`additionalFields.${index}.key`)}
-                type="text"
-                placeholder="Field Name"
-                className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-              />
-              <input
-                {...register(`additionalFields.${index}.value`)}
-                type="text"
-                placeholder="Field Value"
-                className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-              />
-              <button
-                type="button"
-                onClick={() => removeField(index)}
-                className="p-2 text-red-600 hover:text-red-800"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-          ))}
-          <button
+        <div className="flex items-end justify-end">
+          {isImageUploading ? <button
             type="button"
-            onClick={addNewField}
-            className="mt-2 flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+            className="px-6 py-3 bg-yellow-400 text-black rounded-md hover:bg-yellow-300 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-50"
           >
-            <Plus className="w-4 h-4 mr-2" />
-            Add New Field
+            Image Upload In Progress
           </button>
-        </div>
-
-        <div className='flex items-end justify-end'>
+          :
           <button
             type="submit"
             className="px-6 py-3 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
+            disabled={isImageUploading}
           >
             Save Changes
-          </button>
+          </button>}
         </div>
       </form>
-
-      <Dialog
-        open={isImageModalOpen}
-        onClose={() => setIsImageModalOpen(false)}
-        className="fixed inset-0 z-10 overflow-y-auto"
-      >
-        <div className="flex items-center justify-center min-h-screen">
-          <Dialog.Overlay className="fixed inset-0 bg-black opacity-30" />
-
-          <div className="relative bg-white rounded-lg max-w-md w-full mx-auto p-6">
-            <Dialog.Title className="text-lg font-medium leading-6 text-gray-900 mb-2">
-              Restaurant Image
-            </Dialog.Title>
-            <div className="mt-2">
-              <img src={restaurantData.image} alt={restaurantData.name} className="w-full h-auto rounded-md" />
-            </div>
-            <div className="mt-4">
-              <button
-                type="button"
-                className="px-4 py-2 text-sm font-medium text-blue-900 bg-blue-100 border border-transparent rounded-md hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500"
-                onClick={() => setIsImageModalOpen(false)}
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      </Dialog>
     </div>
   )
 }

@@ -41,7 +41,7 @@ export default function HomePage() {
 
   useEffect(() => {
     if(isAuthenticated && isVendor){
-      navigate("/dashboard");
+      navigate("/admin/home");
     }
     
     },[isAuthenticated, isVendor]

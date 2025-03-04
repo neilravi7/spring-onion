@@ -11,7 +11,7 @@ import { Link } from 'react-router-dom';
 export default function FoodVendorLogin() {
   const { register, handleSubmit, formState: { errors } } = useForm()
   const [isLoading, setIsLoading] = useState(false)
-  const { error, success, inProgress, isAuthenticated } = useSelector((state) => state.auth); 
+  const { error, success, inProgress, isAuthenticated, isVendor} = useSelector((state) => state.auth); 
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -36,15 +36,17 @@ export default function FoodVendorLogin() {
   }
 
   useEffect(() => {
-    if (isAuthenticated){
-      navigate("/dashboard");
+    if (isAuthenticated && isVendor){
+      navigate("/admin/home");
     }
+    
     if (error) {
       toast.error(error); // Show error message
     }
+    
     if (success) {
       toast.success("Login successful!"); // Show success message
-      navigate('/dashboard');
+      navigate('/admin/home');
     }
 
   }, [error, success, inProgress, isAuthenticated])

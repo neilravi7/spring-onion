@@ -58,7 +58,7 @@ export default function DashboardLayout() {
               setIsSidebarOpen(false)
             }}
             to={item.link}
-            className={`flex ms-3 items-center px-4 py-2 text-gray-700 transition-colors duration-200 ease-in-out ${
+            className={`rounded-tl-2xl rounded-bl-2xl flex ms-3 my-2 items-center px-4 py-2 text-gray-700 transition-colors duration-200 ease-in-out ${
               item.label === activeSidebarItem ? 'bg-red-50 text-red-500' : 'hover:bg-gray-100'
             }`}
           >
