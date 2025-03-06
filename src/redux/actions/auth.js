@@ -40,6 +40,8 @@ export function startLogin() {
 }
 
 export function successLogin(vendor, customer) {
+  console.log("Login success: ", vendor, customer);
+
   return {
     type: LOGIN_SUCCESS,
     vendor:vendor,
@@ -89,6 +91,7 @@ export const userLogin = (requestPayload) => async(dispatch) => {
     dispatch(failedLogin(response.message));
   }else{
     const {isVendor, isCustomer } = response.data.userInfo.role;
+
     dispatch(successLogin(isVendor, isCustomer));
     window.localStorage.setItem("access", response.data.access);
     window.localStorage.setItem("refresh", response.data.refresh);

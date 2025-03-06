@@ -15,3 +15,11 @@ export const SIGN_UP_FAILED = "SIGN_UP_FAILED";
 export const LOGIN_START = "LOGIN_START";
 export const LOGIN_SUCCESS = "LOGIN_SUCCESS";
 export const LOGIN_FAILED = "LOGIN_FAILED";
+
+//! Vendor actions
+// export const LOAD_VENDOR_PROFILE = "LOAD_VENDOR_PROFILE";
+
+// //! Customer actions
+// export const LOAD_CUSTOMER_PROFILE = "LOAD_CUSTOMER_PROFILE";
+
+// //! Menu action

@@ -1,14 +1,16 @@
 import { SIGN_UP_START, SIGN_UP_SUCCESS, SIGN_UP_FAILED, CLEAR_AUTH_STATE, LOGIN_START, LOGIN_SUCCESS, LOGIN_FAILED, LOGOUT_USER } from "../actions/actionType";
-import { getUserDetails, isUserAuthenticated } from "../../helpers/utils";
+import { getUserDetails, isUserAuthenticated, isUserCustomer, isUserVendor } from "../../helpers/utils";
 
 const userInfo = getUserDetails();
-const isAuthenticated = isUserAuthenticated()
+const isAuthenticated = isUserAuthenticated();
+const isVendor = isUserVendor();
+const isCustomer = isUserCustomer();
 
 const initialState = { 
     user:userInfo,
     isAuthenticated:isAuthenticated,
-    isVendor:null,
-    isCustomer:null,
+    isVendor:isVendor,
+    isCustomer:isCustomer,
     isLocated:false,
     error:null,
     success:false,
@@ -39,6 +41,7 @@ export default function auth(state=initialState, action){
                 error:action.error
             }
         case LOGIN_SUCCESS:
+            console.log("LOGIN_SUCCESS : ", action.vendor, action.customer);
             return{
                 ...state,
                 inProgress:false,

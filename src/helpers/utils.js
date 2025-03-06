@@ -40,6 +40,41 @@ export function getUserDetails(){
     }
 }
 
+export function isObjectEmpty(objName){
+    return Object.keys(objName).length === 0 && objName.constructor === Object;
+}
+
+// retrieve user role's
+export function isUserVendor(){
+    const userObj = getUserDetails();
+    if(!isObjectEmpty(userObj)){
+        return userObj.role.isVendor
+    }else{
+        return false
+    }
+}
+
+export function isUserCustomer(){
+    const userObj = getUserDetails();
+    if(!isObjectEmpty(userObj)){
+        return userObj.role.isCustomer;
+    }else{
+        return false
+    }
+}
+
+
+export function getUserID(){
+    const userObj = getUserDetails();
+    if(!isObjectEmpty(userObj)){
+        return userObj.id;
+    }else{
+        return null;
+    }
+}
+
+
+// logout user
 export function logoutUser(){
     window.localStorage.removeItem("access");
     window.localStorage.removeItem("refresh");

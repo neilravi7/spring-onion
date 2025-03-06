@@ -35,8 +35,8 @@ export default function HomePage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if(!isAuthenticated && !isCustomer){
-      navigate("/login");
+    if(isAuthenticated && isVendor){
+      navigate("/admin/home");
     }
     },[isAuthenticated, isCustomer]
   );
