@@ -31,6 +31,8 @@ export default function DashboardLayout() {
   useEffect(() => {
     if (!isAuthenticated && !isVendor) {
       navigate("/vendor/login")
+    }else{
+      navigate("/")
     }
   }, [isAuthenticated, isVendor, navigate])
 

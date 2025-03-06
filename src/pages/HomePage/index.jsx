@@ -15,10 +15,10 @@ import VendorCard from '../../components/MarketPlace/VendorCard';
 
 
 const restaurants = [
-  { id:1, name: 'Food world', rating: 4.6, status: 'Opens Tomorrow', image: vendor, discount: '20% off', isFast: true, logo: 'https://v0.dev/placeholder.svg?height=40&width=40&text=F', distance: '1.2 km', cuisine: 'South Indian' },
-  { id:2, name: 'Pizza hub', rating: 4.0, status: 'Opens Tomorrow', image: vendor, discount: '10% off', isFast: true, logo: 'https://v0.dev/placeholder.svg?height=40&width=40&text=P', distance: '0.8 km', cuisine: 'Italian' },
-  { id:3, name: 'Donuts hut', rating: 2.0, status: 'Open Now', image: vendor, discount: '15% off', isFast: true, logo: 'https://v0.dev/placeholder.svg?height=40&width=40&text=D', distance: '1.5 km', cuisine: 'Desserts' },
-  { id:4, name: 'Donuts hut', rating: 5.0, status: 'Open Now', image: vendor, discount: '15% off', isFast: true, logo: 'https://v0.dev/placeholder.svg?height=40&width=40&text=D', distance: '2.0 km', cuisine: 'Desserts' },
+  { id: 1, name: 'Food world', rating: 4.6, status: 'Opens Tomorrow', image: vendor, discount: '20% off', isFast: true, logo: 'https://v0.dev/placeholder.svg?height=40&width=40&text=F', distance: '1.2 km', cuisine: 'South Indian' },
+  { id: 2, name: 'Pizza hub', rating: 4.0, status: 'Opens Tomorrow', image: vendor, discount: '10% off', isFast: true, logo: 'https://v0.dev/placeholder.svg?height=40&width=40&text=P', distance: '0.8 km', cuisine: 'Italian' },
+  { id: 3, name: 'Donuts hut', rating: 2.0, status: 'Open Now', image: vendor, discount: '15% off', isFast: true, logo: 'https://v0.dev/placeholder.svg?height=40&width=40&text=D', distance: '1.5 km', cuisine: 'Desserts' },
+  { id: 4, name: 'Donuts hut', rating: 5.0, status: 'Open Now', image: vendor, discount: '15% off', isFast: true, logo: 'https://v0.dev/placeholder.svg?height=40&width=40&text=D', distance: '2.0 km', cuisine: 'Desserts' },
 ]
 
 const categories = [
@@ -31,24 +31,24 @@ const categories = [
 ]
 
 export default function HomePage() {
-  const {isAuthenticated, isLocated, isCustomer} = useSelector((state) => state.auth);
+  const { isAuthenticated, isLocated, isCustomer } = useSelector((state) => state.auth);
   const navigate = useNavigate();
 
   useEffect(() => {
-    if(isAuthenticated && isVendor){
-      navigate("/admin/home");
+    if (!isAuthenticated && !isCustomer) {
+      navigate("/login");
     }
-    },[isAuthenticated, isCustomer]
+  }, [isAuthenticated, isCustomer]
   );
-  
+
   return (
     <div className="min-h-screen bg-white">
       {/* Header Menu */}
-      <Header/>
+      <Header />
       {/* Header End */}
       {/* Section container */}
       <main className="container-2xl mx-auto px-4 py-5">
-        
+
         <section className="mb-12 bg-light py-2 px-2">
           <h2 className="text-2xl font-bold mb-6">Popular Categories</h2>
           <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
@@ -117,7 +117,7 @@ export default function HomePage() {
       {/* Section container end*/}
 
       {/* Footer */}
-      <Footer/>
+      <Footer />
       {/* Footer End */}
     </div>
   )
