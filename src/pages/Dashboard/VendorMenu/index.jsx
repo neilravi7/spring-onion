@@ -1,77 +1,29 @@
-import React, { useState, Fragment } from 'react';
+import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import React, { useState, Fragment, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Star, Edit, Trash2, Plus, Upload } from 'lucide-react';
+import { Star, Edit, Trash2, Plus, Upload, ArchiveIcon } from 'lucide-react';
 import { useForm, Controller } from 'react-hook-form';
 import { Dialog, Transition, Listbox } from '@headlessui/react';
-import dish from "../../../assets/vendor-6.jpg";
+import { requestMaker, requestOptionCreator } from '../../../helpers/request';
+import { API_URL } from '../../../helpers/urls';
+import toast from 'react-hot-toast';
+import { getAccessToken } from '../../../helpers/utils';
 
-const foodItems = [
-  {
-    id: 1,
-    name: 'Gigantic Beef Sticks',
-    price: 14.45,
-    rating: 4.3,
-    image: '/placeholder.svg?height=200&width=300',
-    category: 'Meat',
-    description: 'Juicy and flavorful beef sticks, perfect for snacking.',
-  },
-  {
-    id: 2,
-    name: 'Ramen Noodles',
-    price: 14.45,
-    rating: 4.3,
-    image: '/placeholder.svg?height=200&width=300',
-    category: 'Noodles',
-    description: 'Authentic Japanese ramen noodles in a rich broth.',
-  },
-  {
-    id: 3,
-    name: 'Delicious Cheese Pie',
-    price: 14.45,
-    rating: 4.3,
-    image: '/placeholder.svg?height=200&width=300',
-    category: 'Dessert',
-    description: 'Creamy cheese pie with a golden, flaky crust.',
-  },
-  {
-    id: 4,
-    name: 'Chicken Deluxe Frie',
-    price: 14.45,
-    rating: 4.3,
-    image: '/placeholder.svg?height=200&width=300',
-    category: 'Chicken',
-    description: 'Crispy fried chicken with a special blend of spices.',
-  },
-  {
-    id: 5,
-    name: 'Spicy Beef Burger',
-    price: 14.45,
-    rating: 4.3,
-    image: '/placeholder.svg?height=200&width=300',
-    category: 'Burger',
-    description: 'Juicy beef patty with a spicy kick, topped with fresh veggies.',
-  },
-  {
-    id: 6,
-    name: 'Vegetable Mix',
-    price: 14.45,
-    rating: 4.3,
-    image: '/placeholder.svg?height=200&width=300',
-    category: 'Vegetarian',
-    description: 'A colorful mix of fresh, seasonal vegetables.',
-  },
-]
-
-const categories = ['Meat', 'Noodles', 'Dessert', 'Chicken', 'Burger', 'Vegetarian']
 
 export default function VendorMenu() {
-  const [items, setItems] = useState(foodItems)
-  const [editItem, setEditItem] = useState(null)
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+  const [items, setItems] = useState(() => []);
+  const [editItem, setEditItem] = useState(null);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState({ isOpen: false, itemId: null, itemName: '' })
+  // changes
+  const {isAuthenticated, isVendor} = useSelector((state) => state.auth) 
+  const navigate = useNavigate();
 
+  //! item actions
   const handleEdit = (item) => {
-    setEditItem(item)
+    const editableItem = {...item, category:item.category.name}
+    setEditItem(editableItem)
   }
 
   const handleDeleteConfirmation = (id, name) => {
@@ -80,20 +32,71 @@ export default function VendorMenu() {
 
   const handleDelete = () => {
     if (deleteConfirmation.itemId) {
+      const requestOptions = requestOptionCreator("PATCH", {"is_available":false}, true);
+      requestMaker(API_URL.updateFoodItem(deleteConfirmation.itemId), requestOptions).then((response) => {
+        if(response.isError){
+          toast.error("Unable to change Item availability");
+        }else{
+          toast.success("Item availability changed");
+        }
+      })
       setItems(items.filter(item => item.id !== deleteConfirmation.itemId))
       setDeleteConfirmation({ isOpen: false, itemId: null, itemName: '' })
     }
   }
 
   const handleUpdate = (updatedItem) => {
+    console.table(updatedItem);
     setItems(items.map(item => item.id === updatedItem.id ? updatedItem : item))
-    setEditItem(null)
+    //! update item logic goes here.
+    const requestOptions = requestOptionCreator("PUT", updatedItem, true);
+    requestMaker(API_URL.updateFoodItem(updatedItem.id), requestOptions).then((response) => {
+      if(response.isError){
+        toast.error("unable to update item details");
+        setEditItem(null)
+      }else{
+        setItems(items.map(item => item.id === updatedItem.id ? updatedItem : item))
+        toast.success("Item details updated");
+        setEditItem(null)
+      }
+    })
   }
 
   const handleAdd = (newItem) => {
-    setItems([...items, { ...newItem, id: items.length + 1, rating: 0 }])
+    console.table(newItem)
+    const requestOptions = requestOptionCreator("POST", newItem, true);
+    requestMaker(API_URL.addFoodItem(), requestOptions).then((response) => {
+      if(response.isError){
+        toast.error("Error while adding new item");
+      }else{
+        toast.success("New item added to menu");
+        setItems([...items, { ...newItem, id: items.length + 1, rating: 0 }])
+      }
+    })
     setIsAddDialogOpen(false)
   }
+
+  //! API Calls
+
+  const fetchMenu = () => {
+    const requestOptions = requestOptionCreator("GET", {}, true);
+    requestMaker(API_URL.getFoodItems(), requestOptions)
+    .then((response) => {
+      if(response.isError){
+        toast.error("Error while loading Menu");
+      }else{
+        setItems(response.data)
+        toast.success("Menu data loaded successfully");
+      }
+    })
+  }
+
+  useEffect(() =>{
+    if(!isAuthenticated && !isVendor){
+      navigate("/vendor/login")
+    }
+    fetchMenu();
+  },[isAuthenticated, isVendor])
 
   return (
     <div className="p-6 relative min-h-screen bg-white rounded-md">
@@ -114,38 +117,39 @@ export default function VendorMenu() {
             <div className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300">
               <div className="relative">
                 <img
-                  src={dish}
+                  src={item.image}
                   alt={item.name}
                   className="w-full h-48 object-cover"
                 />
                 <div className="absolute top-2 left-2 bg-white rounded-full px-2 py-1 flex items-center gap-1 shadow-md">
                   <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                  <span className="text-sm font-medium">{item.rating}</span>
+                  <span className="text-sm font-medium">{4.3}</span>
                 </div>
                 <div className="absolute top-2 right-2 bg-white rounded-full px-2 py-1 shadow-md">
-                  <span className="text-sm font-medium">{item.category}</span>
+                  <span className="text-sm font-medium">{item.category.name}</span>
                 </div>
               </div>
               <div className="p-4">
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="font-medium text-gray-900">{item.name}</h3>
-                  <span className="text-red-500 font-medium">${item.price.toFixed(2)}</span>
+                  <span className="text-red-500 font-medium">${item.price/100}</span>
                 </div>
                 <p className="text-gray-600 text-sm mb-4">{item.description}</p>
                 <div className="flex justify-between">
                   <button
-                    className="px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200"
+                    className="px-3 py-1 bg-yellow-300 text-amber-950 rounded-md hover:bg-yellow-400 transition-colors duration-200"
                     onClick={() => handleEdit(item)}
                   >
                     <Edit className="w-4 h-4 mr-2 inline" />
                     Edit
                   </button>
                   <button
-                    className="px-3 py-1 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors duration-200"
+                    className="px-3 py-1 bg-orange-400 text-white rounded-md hover:bg-orange-500 transition-colors duration-200"
                     onClick={() => handleDeleteConfirmation(item.id, item.name)}
                   >
-                    <Trash2 className="w-4 h-4 mr-2 inline" />
-                    Delete
+                    <ArchiveIcon className="w-4 h-4 mr-2 inline" />
+                    {/* {item.is_available ? "Archive" : "Unarchive" } */}
+                    delete
                   </button>
                 </div>
               </div>
@@ -255,21 +259,71 @@ function ProductForm({ item, onSubmit, onCancel, title }) {
     },
   })
 
+  const [categories, setCategories] = useState([]);
+
   const [imagePreview, setImagePreview] = useState(item?.image || null)
+  const [imageUrl, setImageUrl] = useState("");
+  const [isImageUploaded, setIsImageUploaded] = useState(true);
+
+  const fetchCategories = () => {
+    const requestOptions = requestOptionCreator("GET", {}, true);
+    requestMaker(API_URL.getCategoryList(), requestOptions)
+    .then((response) => {
+      if(response.isError){
+        toast.error("Error while loading categories");
+      }else{
+        setCategories(response.data)
+      }
+    })
+  }
+
 
   const onFormSubmit = (data) => {
-    onSubmit({ ...data, image: imagePreview || data.image })
+    onSubmit({ ...data, image: imageUrl || data.image })
   }
 
   const handleImageChange = (e) => {
     const file = e.target.files[0]
     if (file) {
+      const formData = new FormData();
+      formData.append("file", file);
+      
+      const token = getAccessToken();
+      if (!token) {
+        toast.error("Unauthorized: Please log in again.");
+        return;
+      }
+
       const reader = new FileReader()
       reader.onloadend = () => {
         setImagePreview(reader.result)
         setValue("image", reader.result)
       }
       reader.readAsDataURL(file)
+
+      //! uploading image file  
+      setIsImageUploaded(false);
+
+      fetch(API_URL.fileUploadAPI(), {
+        method: "POST",
+        body: formData,
+        headers: {
+          Authorization: `Token ${token}`,
+        },
+      }).then((response) => {
+        if(!response.ok){
+          toast.error("Unable to upload image on server");
+        }
+        return response.json()
+      }).then((data) => {
+        console.log(data.url);
+        setValue("image", data.url);
+        setImageUrl(data.url);
+        setIsImageUploaded(true);
+      }).catch((error) =>{
+        toast.error("Image upload failed ", error);
+        setIsImageUploaded(true);
+      })
     }
   }
 
@@ -352,7 +406,7 @@ function ProductForm({ item, onSubmit, onCancel, title }) {
                       control={control}
                       rules={{ required: "Category is required" }}
                       render={({ field }) => (
-                        <Listbox value={field.value} onChange={field.onChange}>
+                        <Listbox value={field.key} onChange={field.onChange} onClick={fetchCategories}>
                           <div className="relative mt-1">
                             <Listbox.Button className="relative w-full cursor-default rounded-lg bg-white py-2 pl-3 pr-10 text-left shadow-md focus:outline-none focus-visible:border-indigo-500 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300 sm:text-sm">
                               <span className="block truncate">{field.value || 'Select a category'}</span>
@@ -369,15 +423,15 @@ function ProductForm({ item, onSubmit, onCancel, title }) {
                               leaveTo="opacity-0"
                             >
                               <Listbox.Options className="absolute mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
-                                {categories.map((category, categoryIdx) => (
+                                {categories.map((category) => (
                                   <Listbox.Option
-                                    key={categoryIdx}
+                                    key={category.id}
                                     className={({ active }) =>
                                       `relative cursor-default select-none py-2 pl-10 pr-4 ${
                                         active ? 'bg-amber-100 text-amber-900' : 'text-gray-900'
                                       }`
                                     }
-                                    value={category}
+                                    value={category.id}
                                   >
                                     {({ selected }) => (
                                       <>
@@ -386,7 +440,7 @@ function ProductForm({ item, onSubmit, onCancel, title }) {
                                             selected ? 'font-medium' : 'font-normal'
                                           }`}
                                         >
-                                          {category}
+                                          {category.name}
                                         </span>
                                         {selected ? (
                                           <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-amber-600">
@@ -449,12 +503,19 @@ function ProductForm({ item, onSubmit, onCancel, title }) {
                     >
                       Cancel
                     </button>
-                    <button
+                    
+                    {isImageUploaded ? <button
                       type="submit"
                       className="inline-flex justify-center rounded-md border border-transparent bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2"
                     >
                       {title === "Add New Product" ? "Add Product" : "Save Changes"}
-                    </button>
+                    </button>: <button
+                      type="submit"
+                      className="inline-flex justify-center rounded-md border border-transparent bg-yellow-400 px-4 py-2 text-sm font-medium text-amber-800 hover:bg-yellow-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2"
+                      disabled="true"
+                    >
+                      Waiting for file upload
+                    </button>}
                   </div>
                 </form>
               </Dialog.Panel>
