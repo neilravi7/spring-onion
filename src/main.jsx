@@ -7,6 +7,7 @@ import configureStore from './redux/store/index.js'
 
 import App from './App.jsx'
 import './index.css'
+import './App.css'
 
 const store = configureStore();
 

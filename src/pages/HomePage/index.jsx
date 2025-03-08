@@ -1,5 +1,5 @@
 // hooks
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 
@@ -13,8 +13,13 @@ import Header from '../../components/MarketPlace/Header';
 import Footer from '../../components/MarketPlace/Footer';
 import VendorCard from '../../components/MarketPlace/VendorCard';
 
+//utility functions
+import { requestMaker, requestOptionCreator } from '../../helpers/request';
+import { API_URL } from '../../helpers/urls';
+import toast from 'react-hot-toast';
 
-const restaurants = [
+
+const restaurantsList = [
   { id: 1, name: 'Food world', rating: 4.6, status: 'Opens Tomorrow', image: vendor, discount: '20% off', isFast: true, logo: 'https://v0.dev/placeholder.svg?height=40&width=40&text=F', distance: '1.2 km', cuisine: 'South Indian' },
   { id: 2, name: 'Pizza hub', rating: 4.0, status: 'Opens Tomorrow', image: vendor, discount: '10% off', isFast: true, logo: 'https://v0.dev/placeholder.svg?height=40&width=40&text=P', distance: '0.8 km', cuisine: 'Italian' },
   { id: 3, name: 'Donuts hut', rating: 2.0, status: 'Open Now', image: vendor, discount: '15% off', isFast: true, logo: 'https://v0.dev/placeholder.svg?height=40&width=40&text=D', distance: '1.5 km', cuisine: 'Desserts' },
@@ -31,14 +36,29 @@ const categories = [
 ]
 
 export default function HomePage() {
-  const { isAuthenticated, isLocated, isCustomer } = useSelector((state) => state.auth);
+  const { isAuthenticated, isLocated, isVendor } = useSelector((state) => state.auth);
   const navigate = useNavigate();
+  const [restaurants, setRestaurants] = useState(restaurantsList);
+
+  const fetchRestaurants = () => {
+    const requestOptions = requestOptionCreator("GET", {}, true);
+    requestMaker(API_URL.getAllVendor(), requestOptions).then((response) => {
+      if(response.isError){
+        toast.error("Unable to load restaurants");
+        setRestaurants([]);
+      }else{
+        toast.success("Restaurants data loaded successfully");
+        setRestaurants(response.data);
+      }
+    })
+  }
 
   useEffect(() => {
-    if (!isAuthenticated && !isCustomer) {
-      navigate("/login");
+    if (!isAuthenticated && isVendor) {
+      navigate("/admin/login");
     }
-  }, [isAuthenticated, isCustomer]
+    fetchRestaurants();
+  }, [isAuthenticated, isVendor]
   );
 
   return (
@@ -47,9 +67,9 @@ export default function HomePage() {
       <Header />
       {/* Header End */}
       {/* Section container */}
-      <main className="container-2xl mx-auto px-4 py-5">
+      <main className="container mx-auto px-4 py-5">
 
-        <section className="mb-12 bg-light py-2 px-2">
+        {/* <section className="mb-12 bg-light py-2 px-2">
           <h2 className="text-2xl font-bold mb-6">Popular Categories</h2>
           <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
             {categories.map((category) => (
@@ -61,7 +81,7 @@ export default function HomePage() {
               </div>
             ))}
           </div>
-        </section>
+        </section> */}
 
         <section className="mb-12">
           <h2 className="text-2xl font-bold mb-6">Popular Restaurants</h2>
@@ -75,34 +95,35 @@ export default function HomePage() {
           </div>
         </section>
 
+        {!isAuthenticated && <>
         <section className="mb-12">
           <h2 className="text-2xl font-bold mb-6">How It Works</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-white p-6 rounded-lg shadow-md text-center">
-              <MapPin className="h-12 w-12 text-red-500 mx-auto mb-4" />
-              <h3 className="font-bold text-lg mb-2">Choose Your Location</h3>
-              <p className="text-gray-600">Enter your address to find nearby restaurants.</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 ">
+            <div className="p-6 rounded-lg shadow-md text-center bg-green-500">
+              <MapPin className="h-12 w-12 text-white mx-auto mb-4" />
+              <h3 className="font-bold text-lg mb-2 text-white">Choose Your Location</h3>
+              <p className=" text-white">Enter your address to find nearby restaurants.</p>
             </div>
-            <div className="bg-white p-6 rounded-lg shadow-md text-center">
-              <Search className="h-12 w-12 text-red-500 mx-auto mb-4" />
-              <h3 className="font-bold text-lg mb-2">Choose Restaurant</h3>
-              <p className="text-gray-600">Browse menus and select your favorite dishes.</p>
+            <div className="bg-yellow-500 p-6 rounded-lg shadow-md text-center">
+              <Search className="h-12 w-12 text-white mx-auto mb-4" />
+              <h3 className="font-bold text-lg mb-2 text-white">Choose Restaurant</h3>
+              <p className="text-white">Browse menus and select your favorite dishes.</p>
             </div>
-            <div className="bg-white p-6 rounded-lg shadow-md text-center">
-              <ShoppingCart className="h-12 w-12 text-red-500 mx-auto mb-4" />
-              <h3 className="font-bold text-lg mb-2">Get It Delivered</h3>
-              <p className="text-gray-600">Your order will be delivered to your doorstep.</p>
+            <div className="bg-gray-800 p-6 rounded-lg shadow-md text-center">
+              <ShoppingCart className="h-12 w-12 text-white mx-auto mb-4" />
+              <h3 className="text-white font-bold text-lg mb-2">Get It Delivered</h3>
+              <p className="text-white">Your order will be delivered to your doorstep.</p>
             </div>
           </div>
         </section>
 
         <section className="mb-12">
-          <div className="bg-white rounded-lg shadow-md overflow-hidden">
+          <div className="bg-red-600 rounded-lg shadow-md overflow-hidden">
             <div className="md:flex">
               <div className="md:w-1/2">
                 <img src={appBg} height={300} width={300} className="object-cover" alt="Mobile app" />
               </div>
-              <div className="p-8 md:w-1/2">
+              <div className="p-8 md:w-1/2 bg-white">
                 <h2 className="text-2xl font-bold mb-4">Get the FoodDash App</h2>
                 <p className="text-gray-600 mb-6">Get the full FoodDash experience on your phone. Order food, track delivery in real-time, and more!</p>
                 <div className="flex space-x-4">
@@ -113,6 +134,7 @@ export default function HomePage() {
             </div>
           </div>
         </section>
+      </>}
       </main>
       {/* Section container end*/}
 

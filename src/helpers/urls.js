@@ -6,6 +6,7 @@ export const API_URL = {
     signIn:() => `${API_ROOT}/login`,
     fileUploadAPI:() => `${API_ROOT}/upload-imgbb/`,
     //vendor
+    getAllVendor:() => `${API_ROOT}/vendor/list`,
     loadVendorProfile:(id) => `${API_ROOT}/vendor/${id}/details`,
     loadVendorDetail:(id) => `${API_ROOT}/vendor/${id}/profile`, // For Edit details api/v1/vendor/ <uuid:user_id>/profile
     updateVendorProfile:(id) => `${API_ROOT}/vendor/${id}/profile`,

@@ -23,7 +23,7 @@ export default function DashboardLayout() {
   const navigate = useNavigate()
   const dispatch = useDispatch()
 
-  const logOut = () => {
+  const handleLogout = () => {
     dispatch(userAuthLogout())
     userSessionLogout()
   }
@@ -80,7 +80,7 @@ export default function DashboardLayout() {
           <Settings className="mr-3" />
           Settings
         </a>
-        <button onClick={logOut} className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors duration-200 ease-in-out w-full text-left">
+        <button onClick={handleLogout} className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors duration-200 ease-in-out w-full text-left">
           <LogOut className="mr-3" />
           Logout
         </button>

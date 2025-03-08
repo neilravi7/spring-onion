@@ -2,6 +2,8 @@ import React from "react";
 
 import { Routes, Route, Navigate} from "react-router-dom";
 import DashboardLayout from "../layout/DashboardLayout";
+import CustomerLayout from "../layout/CustomerLayout";
+import RestaurantMenuPage from "../pages/RestaurantMenuPage";
 
 const HomePage = React.lazy(() => import('../pages/HomePage'));
 const LoginPage = React.lazy(() => import('../pages/Auth/Customer/LoginPage'));
@@ -13,10 +15,7 @@ const VendorMenu = React.lazy(() => import("../pages/Dashboard/VendorMenu"));
 const VendorProfile = React.lazy(() => import("../pages/Dashboard/VendorProfile"));
 const VendorProfileEdit = React.lazy(() => import("../pages/Dashboard/VendorProfileEdit"));
 const FourOFour = React.lazy(() => import("../pages/FourOFour"));
-
-
-
-
+const Cart = React.lazy(()=> import("../pages/Cart"));
 
 function AppRoutes(props) {
     return (
@@ -34,7 +33,13 @@ function AppRoutes(props) {
                     <Route path='/admin/profile/edit'  element={<VendorProfileEdit />}/>
                     <Route path='/admin/menu'  element={<VendorMenu />}/>
                 </Route>
+                <Route path='/customer'  element={<CustomerLayout />}>
+                    <Route path='/customer/cart' element={<Cart />}/>
+                </Route>
+                <Route path='restaurant/menu' element={<RestaurantMenuPage />}/>
                 <Route path='*' element={<FourOFour />}/>
+                
+
             </Routes>
         </React.Suspense>
     );
