@@ -16,6 +16,9 @@ export const API_URL = {
     addFoodItem:() => `${API_ROOT}/menu/food/item/create`,
     getItemDetails: (id) => `${API_ROOT}/menu/food/item/${id}`,
     updateFoodItem: (id) => `${API_ROOT}/menu/food/item/${id}`,
+    // get food items for customers
+    getShopMenu: (id) => `${API_ROOT}/menu/food/${id}/items`,
+     
 }
 
 

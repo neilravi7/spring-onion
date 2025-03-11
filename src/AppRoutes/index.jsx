@@ -36,7 +36,7 @@ function AppRoutes(props) {
                 <Route path='/customer'  element={<CustomerLayout />}>
                     <Route path='/customer/cart' element={<Cart />}/>
                 </Route>
-                <Route path='restaurant/menu' element={<RestaurantMenuPage />}/>
+                <Route path='restaurant/:id' element={<RestaurantMenuPage />}/>
                 <Route path='*' element={<FourOFour />}/>
                 
 

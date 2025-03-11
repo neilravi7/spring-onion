@@ -57,7 +57,10 @@ export default function HomePage() {
     if (!isAuthenticated && isVendor) {
       navigate("/admin/login");
     }
-    fetchRestaurants();
+    if(isAuthenticated)
+      {
+        fetchRestaurants();
+      }
   }, [isAuthenticated, isVendor]
   );
 

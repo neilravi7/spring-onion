@@ -6,7 +6,7 @@ export default function VendorCard(vendor) {
     const restaurant = vendor.vendor;
 
     return (
-        <Link to={`/restaurant/${restaurant.id}`}>
+        <Link to={`/restaurant/${restaurant.user}`}>
             <motion.div
                 // key={restaurant.id}
                 className="bg-white rounded-2xl overflow-hidden transition-shadow duration-300 hover:shadow-lg"
