@@ -9,7 +9,7 @@ const ShopCard = ({ restaurant }) => {
     const [activeCategory, setActiveCategory] = useState("All")
 
     return (
-        <motion.div className="md:col-span-1 bg-white p-3 rounded-lg shadow-md h-fit" initial={{ opacity: 0, x: -20 }}
+        <motion.div className="md:col-span-1 bg-white p-3 rounded-xl shadow-lg h-fit" initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.3 }}>
             <div className="mb-6">
                 <h2 className="text-3xl font-bold mb-2 capitalize">{restaurant.name}</h2>
@@ -44,7 +44,7 @@ const ShopCard = ({ restaurant }) => {
                 <div className="flex items-start">
                     <TrainTrack className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
                     <div className="ml-2">
-                        <p className="text-sm text-yellow-700 bg-yellow-300 rounded text-center">2 km away</p>
+                        <p className="p-2 font-bold text-sm text-yellow-700 bg-yellow-300 rounded text-center">2 km away</p>
                     </div>
 
                 </div>

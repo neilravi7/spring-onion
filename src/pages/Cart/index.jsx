@@ -8,71 +8,87 @@ import { Minus, Plus, X, ArrowRight } from 'lucide-react'
 
 import Alert from '../../components/Alert/Alert';
 // action functions
-import { fetchUserCart } from '../../redux/actions/cart';
+import { addToCart, removeToCart } from '../../redux/actions/cart';
+import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
+import { requestMaker, requestOptionCreator } from '../../helpers/request';
+import { API_URL } from '../../helpers/urls';
 
-
-
-const initialCartItems = [
-  {
-    id: 1,
-    name: "Double Patty Burger",
-    price: 14.20,
-    quantity: 1,
-    image: "https://smithakalluraya.com/wp-content/uploads/2024/07/white-sauce-pasta-530x700.jpg"
-  },
-  {
-    id: 2,
-    name: "All Combo",
-    price: 50.20,
-    quantity: 1,
-    image: "https://smithakalluraya.com/wp-content/uploads/2024/07/white-sauce-pasta-530x700.jpg"
-  },
-  {
-    id: 3,
-    name: "Veg And crispy Burger",
-    price: 25.20,
-    quantity: 1,
-    image: "https://smithakalluraya.com/wp-content/uploads/2024/07/white-sauce-pasta-530x700.jpg"
-  }
-]
 
 export default function CartPage() {
-  const [cartItems, setCartItems] = useState(initialCartItems);
+  const {isAuthenticated, isCustomer} = useSelector((state) => state.auth);
+  const [cartItems, setCartItems] = useState([]);
   const { cart, message, error, success } = useSelector((state)=>state.cart)
   const dispatch = useDispatch();
-  
-  
+  const navigate = useNavigate();
+
+
   //! Cart Operations:
-  const updateQuantity = (id, change) => {
-    setCartItems(items =>
-      items.map(item =>
-        item.id === id
-          ? { ...item, quantity: Math.max(1, item.quantity + change) }
-          : item
-      )
-    )
+  const handleQuantityInc = (id, quantity) => {
+    
+    let itemCount = quantity + 1;
+
+    if(itemCount > 5){
+      toast.error("Can't add more then five items.")
+    }else{
+      const requestPayload = {
+        food_item:id,
+        quantity:itemCount
+      }
+      dispatch(addToCart(requestPayload));
+    }
+    
+  }
+
+  const handleQuantityDec = (id, cartItemId, quantity) => {
+    let itemCount = quantity - 1;
+    if(itemCount < 1){
+      dispatch(removeToCart(cartItemId));
+    }else{
+      const requestPayload = {
+        food_item:id,
+        quantity:itemCount
+      }
+      dispatch(addToCart(requestPayload));
+    }
   }
 
   const removeItem = (id) => {
-    setCartItems(items => items.filter(item => item.id !== id))
+    dispatch(removeToCart(id));
   }
 
   const calculateSubtotal = () => {
-    return cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+    return cartItems.reduce((sum, item) => sum + (item.price * item.quantity)/100, 0)
   }
 
+  //! CART CALCULATION AND VARIABLES
   const deliveryCharges = 5.00
   const taxes = 3.50
   const subtotal = calculateSubtotal()
   const total = subtotal + deliveryCharges + taxes
 
+
+  const performCheckout = () => {
+    const requestOptions = requestOptionCreator("POST", {}, true);
+    requestMaker(API_URL.checkout(), requestOptions).then((response) => {
+      if(response.isError){
+        toast.error("Error During Checkout Process.");
+      }else{
+        window.location.href = response.data.checkout_url;
+      }
+    })
+  }
+
   useEffect(() => {
-    // dispatch(fetchUserCart());
-    // setCartItems(cart);
+    if(!isAuthenticated && isCustomer){
+      navigate('/login')
+    }
+    setCartItems(cart);
   },[cart])
 
+
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8">
+    <div className="max-w-5xl mx-auto px-4">
       <div className="space-y-4 p-4">
         {success && <Alert type="success" message={message} onClose={() => console.log("Closed")} />}
       </div>
@@ -88,7 +104,7 @@ export default function CartPage() {
         <div className="lg:col-span-2 space-y-4">
           {cartItems.map((item) => (
             <motion.div
-              key={item.id}
+              key={item.food_item_id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
@@ -104,26 +120,26 @@ export default function CartPage() {
                 <div className="flex items-center gap-4 mt-2">
                   <div className="flex items-center gap-2 bg-gray-100 rounded-lg">
                     <button
-                      onClick={() => updateQuantity(item.id, -1)}
+                      onClick={() => handleQuantityDec(item.food_item_id, item.cart_item_id, item.quantity)}
                       className="p-1 hover:bg-gray-200 rounded-lg"
                     >
                       <Minus className="w-4 h-4" />
                     </button>
                     <span className="w-8 text-center">{item.quantity}</span>
                     <button
-                      onClick={() => updateQuantity(item.id, 1)}
+                      onClick={() => handleQuantityInc(item.food_item_id, item.quantity)}
                       className="p-1 hover:bg-gray-200 rounded-lg"
                     >
                       <Plus className="w-4 h-4" />
                     </button>
                   </div>
                   <span className="text-red-500 font-semibold">
-                    ${(item.price * item.quantity).toFixed(2)}
+                    ${(item.price * item.quantity).toFixed(2)/100}
                   </span>
                 </div>
               </div>
               <button
-                onClick={() => removeItem(item.id)}
+                onClick={() => removeItem(item.cart_item_id)}
                 className="text-gray-400 hover:text-red-500"
               >
                 <X className="w-5 h-5" />
@@ -163,7 +179,8 @@ export default function CartPage() {
 
             <button
               className="w-full mt-6 bg-red-500 text-white py-3 rounded-lg font-semibold flex items-center justify-center gap-2 hover:bg-red-600 transition-colors"
-              onClick={() => console.log('Order placed!')}
+              onClick={() => performCheckout()}
+              disabled={cart.length === 0 } //disabled button if no item into cart.
             >
               Order Now
               <ArrowRight className="w-5 h-5" />

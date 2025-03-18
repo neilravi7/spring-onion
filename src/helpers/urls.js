@@ -18,7 +18,12 @@ export const API_URL = {
     updateFoodItem: (id) => `${API_ROOT}/menu/food/item/${id}`,
     // get food items for customers
     getShopMenu: (id) => `${API_ROOT}/menu/food/${id}/items`,
-     
+    // Cart
+    getCart:() => `${API_ROOT}/cart/items`,
+    addItemToCart:() => `${API_ROOT}/cart/items`,
+    removeItemToCart:(id) => `${API_ROOT}/cart/items/${id}/remove`,
+    // Checkout
+    checkout:() => `${API_ROOT}/checkout/session/start`,
 }
 
 

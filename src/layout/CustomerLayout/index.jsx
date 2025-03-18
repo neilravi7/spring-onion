@@ -4,8 +4,9 @@ import { useNavigate, Outlet } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 
 // Components
-import Header from '../../components/MarketPlace/Header';
 import Footer from '../../components/MarketPlace/Footer';
+import Navbar from '../../components/Shop/Navbar';
+
 
 
 export default function HomePage() {
@@ -22,7 +23,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Header Menu */}
-      <Header />
+      <Navbar />
       {/* Header End */}
       {/* Section container */}
       <main className="container-2xl mx-auto px-4 py-5">

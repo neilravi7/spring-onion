@@ -1,27 +1,33 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { motion } from "framer-motion";
-import { ShoppingBag, User, Menu, Search, X, ChefHat, LogOut, MapPin } from "lucide-react";
+import { ShoppingBag, User, Menu, X, ChefHat, LogOut, MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
 import { logoutUser as userSessionLogout } from "../../helpers/utils";
 import { logoutUser as userAuthLogout } from "../../redux/actions/auth";
 import { truncateString } from "../../helpers/utils";
+import { fetchUserCart } from "../../redux/actions/cart";
 
 const Navbar = () => {
-  const { isAuthenticated } = useSelector((state) => state.auth);
+  const { isAuthenticated, isCustomer } = useSelector((state) => state.auth);
+  const { cart } = useSelector((state) => state.cart);
+  const dispatch = useDispatch();
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [location, setLocation] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [manualLocation, setManualLocation] = useState("");
-  const dispatch = useDispatch();
 
   // Logout
   const handleLogout = () => {
     userSessionLogout();
     dispatch(userAuthLogout());
   };
-
+  
+  // fetch user cart
+  const getUserCart = () => {
+    dispatch(fetchUserCart());
+  }
   // Mobile Menu
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen)
@@ -67,7 +73,11 @@ const Navbar = () => {
     }
   };
 
-
+  useEffect(() => {
+    if(isAuthenticated, isCustomer){
+      getUserCart()
+    }
+  }, [isAuthenticated, isCustomer])
 
   return (
     <nav className="bg-white shadow-md sticky top-0 z-40">
@@ -124,16 +134,18 @@ const Navbar = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
           >
-            <motion.button
-              className="relative p-2 text-gray-700 hover:text-red-500 transition-colors"
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-            >
-              <ShoppingBag className="w-6 h-6" />
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
-                3
-              </span>
-            </motion.button>
+            <Link to={"/customer/cart"}>
+              <motion.button
+                className="relative p-2 text-gray-700 hover:text-red-500 transition-colors"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+              >
+                <ShoppingBag className="w-6 h-6" />
+                {cart.length !== 0 && <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
+                  {cart.length}
+                </span>}
+              </motion.button>
+            </Link>
             <motion.button
               className="p-2 text-gray-700 hover:text-red-500 transition-colors"
               whileHover={{ scale: 1.1 }}

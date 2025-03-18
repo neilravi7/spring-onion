@@ -47,8 +47,7 @@ function RestaurantMenuPage() {
           }else{
             toast.success("Shop Data Loaded");
             setMenuItems(response.data);
-            setIsLoading(false);
-            
+            setIsLoading(false);  
           }
         }
       )

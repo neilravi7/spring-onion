@@ -2,24 +2,49 @@ import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Star, Clock } from "lucide-react"
 import FoodModal from "./FoodModel"
+import { addToCart, removeToCart } from "../../redux/actions/cart"
+import { useDispatch, useSelector } from "react-redux"
+
 
 const ShopMenu = ({ menuItems }) => {
+    const {cart} = useSelector((state) => state.cart)
     const [selectedFood, setSelectedFood] = useState(null)
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [isLoading, setIsLoading] = useState(true);
+    const dispatch = useDispatch();
     
+    const isItemInCart = (id) => {
+        return cart.some((item) => item.food_item_id === id);
+    }
+
     const openModal = (food) => {
         setSelectedFood(food)
         setIsModalOpen(true)
         // Disable scrolling when modal is open
         document.body.style.overflow = "hidden"
-      }
+    }
     
-      const closeModal = () => {
+    const closeModal = () => {
         setIsModalOpen(false)
         // Re-enable scrolling
         document.body.style.overflow = "auto"
-      }
+    }
+
+    const handleAddToCart = (id, quantity) => {
+        if(!isItemInCart(id)){
+            const requestPayload = {
+                food_item:id,
+                quantity:quantity
+            }
+            dispatch(addToCart(requestPayload));
+        }else{
+            const cartItem = cart.find((item) => item.food_item_id === id).cart_item_id;
+            // console.log("cartItem : ", cartItem);
+            dispatch(removeToCart(cartItem));
+        }
+    }
+
+
     return (
         <>
         <div className="md:col-span-3">
@@ -86,14 +111,14 @@ const ShopMenu = ({ menuItems }) => {
 
                             <div className="mt-3 flex justify-between items-center">
                                 <span className="font-bold text-red-500">${food.price/100}</span>
-                                <motion.button className="text-xs bg-red-500 text-white px-2 py-1 rounded-full flex items-center"
+                                <motion.button
+                                    className="text-xs bg-red-500 text-white px-2 py-1 rounded-full flex items-center"
                                     whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={(e) => {
                                         e.stopPropagation()
-                                        // Add to cart functionality would go here
-                                        console.log(`Added ${food.name} to cart`)
+                                        handleAddToCart(food.id, 1);
                                     }}
                                 >
-                                    Add to cart
+                                    {!isItemInCart(food.id) ? ("Add to cart") : ("Remove item")}
                                 </motion.button>
                             </div>
                         </div>

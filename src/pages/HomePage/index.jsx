@@ -9,9 +9,10 @@ import vendor from '../../assets/vendor-13.jpg';
 import appBg from '../../assets/chef-1.png';
 
 // Components
-import Header from '../../components/MarketPlace/Header';
+// import Header from '../../components/MarketPlace/Header';
 import Footer from '../../components/MarketPlace/Footer';
 import VendorCard from '../../components/MarketPlace/VendorCard';
+import Navbar from '../../components/Shop/Navbar';
 
 //utility functions
 import { requestMaker, requestOptionCreator } from '../../helpers/request';
@@ -65,9 +66,9 @@ export default function HomePage() {
   );
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gray-50">
       {/* Header Menu */}
-      <Header />
+      <Navbar />
       {/* Header End */}
       {/* Section container */}
       <main className="container mx-auto px-4 py-5">
