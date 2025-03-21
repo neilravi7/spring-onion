@@ -14,8 +14,10 @@ const VendorHome = React.lazy(() => import("../pages/Dashboard/VendorHome"));
 const VendorMenu = React.lazy(() => import("../pages/Dashboard/VendorMenu"));
 const VendorProfile = React.lazy(() => import("../pages/Dashboard/VendorProfile"));
 const VendorProfileEdit = React.lazy(() => import("../pages/Dashboard/VendorProfileEdit"));
+const OrderListing = React.lazy(() => import("../pages/Dashboard/OrderListing"));
 const FourOFour = React.lazy(() => import("../pages/FourOFour"));
 const Cart = React.lazy(()=> import("../pages/Cart"));
+const OrderTracker = React.lazy(() => import("../pages/OrderTracker"));
 
 function AppRoutes(props) {
     return (
@@ -32,9 +34,11 @@ function AppRoutes(props) {
                     <Route path='/admin/profile'  element={<VendorProfile />}/>
                     <Route path='/admin/profile/edit'  element={<VendorProfileEdit />}/>
                     <Route path='/admin/menu'  element={<VendorMenu />}/>
+                    <Route path='/admin/orders'  element={<OrderListing />}/>
                 </Route>
                 <Route path='/customer'  element={<CustomerLayout />}>
                     <Route path='/customer/cart' element={<Cart />}/>
+                    <Route path='/customer/order/status' element={<OrderTracker />}/>
                 </Route>
                 <Route path='restaurant/:id' element={<RestaurantMenuPage />}/>
                 <Route path='*' element={<FourOFour />}/>

@@ -14,40 +14,46 @@ import { useNavigate } from 'react-router-dom';
 import { requestMaker, requestOptionCreator } from '../../helpers/request';
 import { API_URL } from '../../helpers/urls';
 
+// Firebase
+import { db } from "../../firebase";
+import { collection, addDoc } from "firebase/firestore";
+import firebase from 'firebase/compat/app';
+
 
 export default function CartPage() {
-  const {isAuthenticated, isCustomer} = useSelector((state) => state.auth);
+  const { isAuthenticated, isCustomer } = useSelector((state) => state.auth);
   const [cartItems, setCartItems] = useState([]);
-  const { cart, message, error, success } = useSelector((state)=>state.cart)
+  const { cart, message, error, success } = useSelector((state) => state.cart)
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
 
 
   //! Cart Operations:
   const handleQuantityInc = (id, quantity) => {
-    
+
     let itemCount = quantity + 1;
 
-    if(itemCount > 5){
+    if (itemCount > 5) {
       toast.error("Can't add more then five items.")
-    }else{
+    } else {
       const requestPayload = {
-        food_item:id,
-        quantity:itemCount
+        food_item: id,
+        quantity: itemCount
       }
       dispatch(addToCart(requestPayload));
     }
-    
+
   }
 
   const handleQuantityDec = (id, cartItemId, quantity) => {
     let itemCount = quantity - 1;
-    if(itemCount < 1){
+    if (itemCount < 1) {
       dispatch(removeToCart(cartItemId));
-    }else{
+    } else {
       const requestPayload = {
-        food_item:id,
-        quantity:itemCount
+        food_item: id,
+        quantity: itemCount
       }
       dispatch(addToCart(requestPayload));
     }
@@ -58,7 +64,7 @@ export default function CartPage() {
   }
 
   const calculateSubtotal = () => {
-    return cartItems.reduce((sum, item) => sum + (item.price * item.quantity)/100, 0)
+    return cartItems.reduce((sum, item) => sum + (item.price * item.quantity) / 100, 0)
   }
 
   //! CART CALCULATION AND VARIABLES
@@ -67,24 +73,92 @@ export default function CartPage() {
   const subtotal = calculateSubtotal()
   const total = subtotal + deliveryCharges + taxes
 
+  //! Firebase create an order
+  const createOrder = async (order) => {
+    const docRef = await addDoc(collection(db, "orders"), order);
+    return docRef.id;
+  };
 
-  const performCheckout = () => {
-    const requestOptions = requestOptionCreator("POST", {}, true);
-    requestMaker(API_URL.checkout(), requestOptions).then((response) => {
-      if(response.isError){
-        toast.error("Error During Checkout Process.");
-      }else{
-        window.location.href = response.data.checkout_url;
+
+  function createOrderBody(array, keys) {
+    const result = array.reduce(
+      (acc, item) => {
+        // Pick only the selected keys
+        const picked = {};
+        keys.forEach(key => {
+          if (item.hasOwnProperty(key)) {
+            picked[key] = item[key];
+          }
+        });
+        acc.items.push(picked);
+
+        // Aggregate totals
+        acc.total_price += item.price * item.quantity;
+        acc.total_quantity += item.quantity;
+
+        return acc;
+      },
+      { items: [], total_price: 0, total_quantity: 0 }
+    );
+    return result;
+  }
+
+  const updateOrder = async (order, firestoreId) => {
+    const requestOptions = requestOptionCreator("PATCH", { firebase_order_id: firestoreId }, true);
+    requestMaker(API_URL.orderUpdate(order), requestOptions).then(async (response) => {
+      if (response.isError) {
+        console.log("Order updating failed");
+      } else {
+        console.log(response.data);
       }
     })
   }
 
+  //! Checkout
+  const performCheckout = async () => {
+    setIsLoading(true);
+    const requestOptions = requestOptionCreator("POST", {}, true);
+    const response = await requestMaker(API_URL.checkout(), requestOptions);
+    if (response.isError) {
+      toast.error("Error During Checkout Process.");
+    } else {
+      const lineItems = createOrderBody(cart, ['food_item_id', 'name', 'price', 'quantity']);
+      const userInfo = JSON.parse(window.localStorage.getItem("userInfo"));
+      const now = new Date();
+      const date = now.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+      const time = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+      const order = {
+        customer_name:userInfo.name,
+        customer_email:userInfo.email,
+        customer_phone:userInfo.phone,
+        deliveryAddress:userInfo.address,
+        customer: cart[0].customer,
+        vendor: cart[0].vendor,
+        restaurant: cart[0].restaurant,
+        payment_status: "pending",
+        real_time_status: "Pending",
+        estimatedDelivery: "pending",
+        items: lineItems.items,
+        total: (lineItems.total_price) / 100 + 13.5,
+        display_id:String(response.data.display_id),
+        date:date,
+        time:time,
+      }
+      const firebaseOrderId = await createOrder(order);
+      const djangoOrderId = response.data.orderId
+      console.log("Before order update: ", djangoOrderId, firebaseOrderId);
+      await updateOrder(djangoOrderId, firebaseOrderId)
+      setIsLoading(false);
+      window.location.href = response.data.checkout_url;
+    }
+  }
+
   useEffect(() => {
-    if(!isAuthenticated && isCustomer){
+    if (!isAuthenticated && isCustomer) {
       navigate('/login')
     }
     setCartItems(cart);
-  },[cart])
+  }, [cart])
 
 
   return (
@@ -102,6 +176,8 @@ export default function CartPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Cart Items - Left Side */}
         <div className="lg:col-span-2 space-y-4">
+          {cartItems.length === 0 && <> <div className="flex-1">
+                <h3 className="font-semibold text-gray-800">No item in you cart</h3></div></>}
           {cartItems.map((item) => (
             <motion.div
               key={item.food_item_id}
@@ -134,7 +210,7 @@ export default function CartPage() {
                     </button>
                   </div>
                   <span className="text-red-500 font-semibold">
-                    ${(item.price * item.quantity).toFixed(2)/100}
+                    ${(item.price * item.quantity).toFixed(2) / 100}
                   </span>
                 </div>
               </div>
@@ -180,9 +256,9 @@ export default function CartPage() {
             <button
               className="w-full mt-6 bg-red-500 text-white py-3 rounded-lg font-semibold flex items-center justify-center gap-2 hover:bg-red-600 transition-colors"
               onClick={() => performCheckout()}
-              disabled={cart.length === 0 } //disabled button if no item into cart.
+              disabled={cart.length === 0} //disabled button if no item into cart.
             >
-              Order Now
+              {isLoading ? "Processing..." : "Order Now"}
               <ArrowRight className="w-5 h-5" />
             </button>
           </motion.div>

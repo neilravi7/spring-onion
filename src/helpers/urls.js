@@ -24,6 +24,8 @@ export const API_URL = {
     removeItemToCart:(id) => `${API_ROOT}/cart/items/${id}/remove`,
     // Checkout
     checkout:() => `${API_ROOT}/checkout/session/start`,
+    orderStatus: () => `${API_ROOT}/checkout/api/session/status`,
+    orderUpdate: (id) => `${API_ROOT}/orders/order/patch/${id}`
 }
 
 

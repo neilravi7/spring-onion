@@ -37,7 +37,7 @@ const categories = [
 ]
 
 export default function HomePage() {
-  const { isAuthenticated, isLocated, isVendor } = useSelector((state) => state.auth);
+  const { isAuthenticated, isLocated, isVendor, isCustomer } = useSelector((state) => state.auth);
   const navigate = useNavigate();
   const [restaurants, setRestaurants] = useState(restaurantsList);
 
@@ -55,10 +55,10 @@ export default function HomePage() {
   }
 
   useEffect(() => {
-    if (!isAuthenticated && isVendor) {
-      navigate("/admin/login");
+    if (isAuthenticated && isVendor) {
+      navigate("/vendor/login");
     }
-    if(isAuthenticated)
+    if(isAuthenticated && isCustomer)
       {
         fetchRestaurants();
       }

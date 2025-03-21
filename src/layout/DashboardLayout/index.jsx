@@ -1,19 +1,21 @@
 import { Outlet } from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Bell, Settings, LogOut, ChevronDown,LayoutDashboard, SquareDashedKanban, ShoppingBag, Users, ChefHat, TruckIcon, Wallet2, StarIcon, Menu as MenuIcon, X, User, Edit, BellIcon } from 'lucide-react';
+import { Search, Bell, Settings, LogOut, ChevronDown,LayoutDashboard, SquareDashedKanban, ListFilter, Users, ChefHat, TruckIcon, Wallet2, StarIcon, Menu as MenuIcon, X, User, Edit, BellIcon } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { logoutUser as userSessionLogout } from '../../helpers/utils';
 import { logoutUser as userAuthLogout } from '../../redux/actions/auth';
 import { Link } from 'react-router-dom';
 import { Menu, Transition } from '@headlessui/react';
+import { getUserDetails } from '../../helpers/utils';
+
 
 const sidebarItems = [
   { icon: LayoutDashboard, label: 'Dashboard', link:"/admin/home" },
-  // { icon: ShoppingBag, label: 'Orders', link:"#" },
   { icon: Users, label: 'Restaurant Profile', link:"/admin/profile" },
   { icon: SquareDashedKanban, label: 'Menu', link:"/admin/menu" },
+  { icon: ListFilter, label: 'Orders', link:"/admin/orders" },
 ]
 
 export default function DashboardLayout() {
@@ -22,6 +24,8 @@ export default function DashboardLayout() {
   const { isAuthenticated, isVendor } = useSelector((state) => state.auth)
   const navigate = useNavigate()
   const dispatch = useDispatch()
+  const userDetails = getUserDetails();
+
 
   const handleLogout = () => {
     dispatch(userAuthLogout())
@@ -31,9 +35,8 @@ export default function DashboardLayout() {
   useEffect(() => {
     if (!isAuthenticated && !isVendor) {
       navigate("/vendor/login")
-    }else{
-      navigate("/")
     }
+    
   }, [isAuthenticated, isVendor, navigate])
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen)
@@ -162,7 +165,7 @@ export default function DashboardLayout() {
                     alt="User avatar"
                     className="w-8 h-8 rounded-full"
                   />
-                  <span className="font-medium text-gray-700">Kaiya Botosh</span>
+                  <span className="font-medium text-gray-700">{userDetails.name}</span>
                   <ChevronDown className="w-4 h-4 text-gray-500" />
                 </Menu.Button>
                 <Transition
@@ -224,7 +227,7 @@ export default function DashboardLayout() {
         </header>
 
         {/* Breadcrumbs and Page Heading */}
-        <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto py-2 px-4 sm:px-6 lg:px-8">
           <h1 className="text-3xl font-bold text-gray-900">{activeSidebarItem}</h1>
         </div>
 
