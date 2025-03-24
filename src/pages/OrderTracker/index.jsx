@@ -4,11 +4,11 @@ import { motion, AnimatePresence } from "framer-motion"
 import { Check, X, Clock, ChefHat, Bike, Package, MapPin, Navigation } from "lucide-react"
 import { requestMaker, requestOptionCreator } from "../../helpers/request";
 import { API_URL } from "../../helpers/urls";
-import toast from "react-hot-toast";
+import { Link } from "react-router-dom";
 import DeliveryGuy from "../../components/Loader/DeliveryGuy";
 
 // Firebase
-import { doc, onSnapshot } from "firebase/firestore";
+import { doc, onSnapshot, updateDoc } from "firebase/firestore";
 import {db} from "../../firebase";
 
 
@@ -72,14 +72,28 @@ export default function OrderTracker({ orderStatus = "Placed", isSuccess = true 
     const response = await requestMaker(API_URL.orderStatus(), requestOptions);
     return response;
   };
+
+  const updatePaymentStatus = async (orderId, status) => {
+    const docRef = doc(db, "orders", orderId);
+    
+    await updateDoc(docRef, {
+      payment_status: status
+    });
+  
+    console.log("Payment status updated!");
+  };
   
   useEffect(() => {
     const fetchOrder = async () => {
       const response = await getOrderDetails(orderId);
-      if (response.isError) {
-        toast.error("Error while loading data");
+      console.log("response.success", response.data.success)
+      if (!response.data.success) {
+        setOrderSuccess(false);
+        setIsLoading(false);
+
       } else {
         const firebaseOrderId = response.data.order.firebase_order_id;
+        await updatePaymentStatus(firebaseOrderId, response.data.order.payment_status);
         const orderRef = doc(db, "orders", firebaseOrderId);
         const unsubscribe = onSnapshot(orderRef, (docSnap) => {
           if (docSnap.exists()) {
@@ -136,9 +150,12 @@ export default function OrderTracker({ orderStatus = "Placed", isSuccess = true 
                 </div>
                 <h2 className="text-2xl font-bold text-gray-800 mb-2">Order Failed</h2>
                 <p className="text-gray-600 text-center">We couldn't process your order. Please try again.</p>
+                
+                <Link to={'/customer/profile'}>
                 <button className="mt-4 px-6 py-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors">
                   Try Again
                 </button>
+                </Link>
               </motion.div>
             )}
           </AnimatePresence>
@@ -172,12 +189,12 @@ export default function OrderTracker({ orderStatus = "Placed", isSuccess = true 
                       <span>
                         {item.quantity}x {item.name}
                       </span>
-                      <span>${item.price.toFixed(2)}</span>
+                      <span>₹ {(item.price/100).toFixed(2)}</span>
                     </div>
                   ))}
                   <div className="flex justify-between font-semibold mt-2 pt-2 border-t">
                     <span>Total</span>
-                    <span>${order.total.toFixed(2)}</span>
+                    <span>₹ {order.total.toFixed(2)}*inc</span>
                   </div>
                 </div>
               </div>
@@ -352,7 +369,7 @@ export default function OrderTracker({ orderStatus = "Placed", isSuccess = true 
           )}
 
           {/* Demo Controls - Remove in production */}
-          <div className="w-full max-w-md bg-white rounded-xl shadow-md overflow-hidden">
+          {/* <div className="w-full max-w-md bg-white rounded-xl shadow-md overflow-hidden">
             <div className="p-6">
               <h3 className="text-lg font-semibold text-gray-800 mb-4">Demo Controls</h3>
               <div className="flex flex-col gap-4">
@@ -381,7 +398,7 @@ export default function OrderTracker({ orderStatus = "Placed", isSuccess = true 
                 )}
               </div>
             </div>
-          </div>
+          </div> */}
         </>
       )}
     </div>

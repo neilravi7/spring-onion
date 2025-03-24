@@ -16,8 +16,9 @@ import { API_URL } from '../../helpers/urls';
 
 // Firebase
 import { db } from "../../firebase";
-import { collection, addDoc } from "firebase/firestore";
-import firebase from 'firebase/compat/app';
+import { collection, addDoc, serverTimestamp} from "firebase/firestore";
+
+// import firebase from 'firebase/compat/app';
 
 
 export default function CartPage() {
@@ -75,7 +76,10 @@ export default function CartPage() {
 
   //! Firebase create an order
   const createOrder = async (order) => {
-    const docRef = await addDoc(collection(db, "orders"), order);
+    const docRef = await addDoc(collection(db, "orders"), {
+      ...order,
+      createdAt: serverTimestamp()
+    });
     return docRef.id;
   };
 
@@ -143,6 +147,7 @@ export default function CartPage() {
         display_id:String(response.data.display_id),
         date:date,
         time:time,
+        
       }
       const firebaseOrderId = await createOrder(order);
       const djangoOrderId = response.data.orderId
@@ -210,7 +215,7 @@ export default function CartPage() {
                     </button>
                   </div>
                   <span className="text-red-500 font-semibold">
-                    ${(item.price * item.quantity).toFixed(2) / 100}
+                    ₹{(item.price * item.quantity).toFixed(2) / 100}
                   </span>
                 </div>
               </div>
@@ -235,20 +240,20 @@ export default function CartPage() {
             <div className="space-y-3 text-gray-600">
               <div className="flex justify-between">
                 <span>Item Total</span>
-                <span className="text-red-500">${subtotal.toFixed(2)}</span>
+                <span className="text-red-500">₹{subtotal.toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
                 <span>Delivery Charges</span>
-                <span className="text-red-500">${deliveryCharges.toFixed(2)}</span>
+                <span className="text-red-500">₹{deliveryCharges.toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
                 <span>Govt Taxes & Other Charges</span>
-                <span className="text-red-500">${taxes.toFixed(2)}</span>
+                <span className="text-red-500">₹{taxes.toFixed(2)}</span>
               </div>
               <div className="border-t pt-3 mt-3">
                 <div className="flex justify-between font-bold text-lg">
                   <span>Total</span>
-                  <span className="text-red-500">${total.toFixed(2)}</span>
+                  <span className="text-red-500">₹{total.toFixed(2)}</span>
                 </div>
               </div>
             </div>

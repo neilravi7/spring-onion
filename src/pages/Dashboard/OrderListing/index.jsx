@@ -9,7 +9,7 @@ import DeliveryGuy from "../../../components/Loader/DeliveryGuy";
 import toast from "react-hot-toast";
 
 // Firebase imports
-import { collection, doc, query, where, onSnapshot, updateDoc } from "firebase/firestore";
+import { collection, doc, query, where, onSnapshot, updateDoc, orderBy } from "firebase/firestore";
 import { db } from "../../../firebase";
 
 
@@ -290,7 +290,8 @@ export default function OrderListing() {
 
     const q = query(
       ordersRef,
-      where("vendor", "==", vendorId) // filter by vendor field
+      where("vendor", "==", vendorId),
+      orderBy("createdAt", "desc")
     );
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {

@@ -11,6 +11,7 @@ import { fetchUserCart } from "../../redux/actions/cart";
 
 const Navbar = () => {
   const { isAuthenticated, isCustomer } = useSelector((state) => state.auth);
+  const { address } = useSelector((state) => state.auth.user)
   const { cart } = useSelector((state) => state.cart);
   const dispatch = useDispatch();
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -76,6 +77,7 @@ const Navbar = () => {
   useEffect(() => {
     if(isAuthenticated, isCustomer){
       getUserCart()
+      setLocation(address);
     }
   }, [isAuthenticated, isCustomer])
 
@@ -146,6 +148,7 @@ const Navbar = () => {
                 </span>}
               </motion.button>
             </Link>
+            <Link to={"/customer/profile"}>
             <motion.button
               className="p-2 text-gray-700 hover:text-red-500 transition-colors"
               whileHover={{ scale: 1.1 }}
@@ -153,6 +156,7 @@ const Navbar = () => {
             >
               <User className="w-6 h-6" />
             </motion.button>
+            </Link>
             <motion.button
               className="p-2 text-gray-700 hover:text-red-500 transition-colors"
               whileHover={{ scale: 1.1 }}

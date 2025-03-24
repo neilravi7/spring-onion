@@ -18,6 +18,7 @@ const OrderListing = React.lazy(() => import("../pages/Dashboard/OrderListing"))
 const FourOFour = React.lazy(() => import("../pages/FourOFour"));
 const Cart = React.lazy(()=> import("../pages/Cart"));
 const OrderTracker = React.lazy(() => import("../pages/OrderTracker"));
+const CustomerProfile = React.lazy(() => import("../pages/CustomerProfile"));
 
 function AppRoutes(props) {
     return (
@@ -39,6 +40,7 @@ function AppRoutes(props) {
                 <Route path='/customer'  element={<CustomerLayout />}>
                     <Route path='/customer/cart' element={<Cart />}/>
                     <Route path='/customer/order/status' element={<OrderTracker />}/>
+                    <Route path='/customer/profile' element={<CustomerProfile/>}/>
                 </Route>
                 <Route path='restaurant/:id' element={<RestaurantMenuPage />}/>
                 <Route path='*' element={<FourOFour />}/>

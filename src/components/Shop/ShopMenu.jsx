@@ -70,7 +70,7 @@ const ShopMenu = ({ menuItems }) => {
                                 onError={()=>{setIsLoading(false)}}
                                 src={food.image} 
                                 alt={food.name} 
-                                className={`w-full h-full object-cover ${isLoading && "animate-pulse"}`} whileHover={{
+                                className={`w-full h-full object-cover ₹{isLoading && "animate-pulse"}`} whileHover={{
                                 scale: 1.05
                             }} transition={{ duration: 0.3 }} />
                             <div className="absolute top-2 left-2 bg-white p-1 rounded-md">
@@ -110,7 +110,7 @@ const ShopMenu = ({ menuItems }) => {
                             </div>
 
                             <div className="mt-3 flex justify-between items-center">
-                                <span className="font-bold text-red-500">${food.price/100}</span>
+                                <span className="font-bold text-red-500">₹{food.price/100}</span>
                                 <motion.button
                                     className="text-xs bg-red-500 text-white px-2 py-1 rounded-full flex items-center"
                                     whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={(e) => {
